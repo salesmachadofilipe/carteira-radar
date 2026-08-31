@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radar da Carteira</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* ============================================================ tokens */
+:root{
+  --bg:#eef1f5; --card:#ffffff; --card-2:#f6f9fb; --card-3:#eff3f8;
+  --ink:#16202b; --ink-2:#54636f; --ink-3:#8493a1;
+  --line:#dde4ec; --line-2:#c6d1dd;
+  --accent:#0b4f9e; --accent-soft:#e7f0fa;
+  --ok:#12905a; --ok-bg:#e4f4ec;
+  --warn:#a86a0b; --warn-bg:#fbf1de;
+  --bad:#c02626; --bad-bg:#fbeceb;
+  --c-ms:#0b4f9e; --c-sc:#0f766e; --c-ru:#b45309;
+  --tint-ms:rgba(11,79,158,.07); --tint-sc:rgba(15,118,110,.07); --tint-ru:rgba(180,83,9,.09);
+  --grid:#ccd7e3; --grid-2:#e3eaf1;
+  --fb:#5b3fc4; --fb-bg:#eeeafb; --fb-line:#d9d0f5;
+  --chip:#f0f3f7; --chip-line:#dde4ec;
+  --auc1-bg:#eef2f7; --auc1-fg:#5c6b7a;
+  --auc2-bg:#dfe9f5; --auc2-fg:#3d6489;
+  --auc3-bg:#c9dcf1; --auc3-fg:#22537f;
+  --auc4-bg:#a9c8e9; --auc4-fg:#0f3c66;
+  --auc5-bg:#4f8bc4; --auc5-fg:#ffffff;
+  --auc6-bg:#0b4f9e; --auc6-fg:#ffffff;
+  --btn-fg:#ffffff;
+  --shadow:0 1px 2px rgba(16,26,38,.05), 0 2px 10px rgba(16,26,38,.05);
+  --r:12px; --r-sm:7px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d141c; --card:#151f2a; --card-2:#1a2531; --card-3:#1f2b38;
+    --ink:#e6edf5; --ink-2:#9fb0c1; --ink-3:#6f8091;
+    --line:#243140; --line-2:#33424f;
+    --accent:#5ba3e8; --accent-soft:#16293e;
+    --ok:#3fbc86; --ok-bg:#0f3328;
+    --warn:#e0a244; --warn-bg:#372812;
+    --bad:#f07a72; --bad-bg:#3a1c1b;
+    --c-ms:#5ba3e8; --c-sc:#3fbfae; --c-ru:#e09b4a;
+    --tint-ms:rgba(91,163,232,.11); --tint-sc:rgba(63,191,174,.10); --tint-ru:rgba(224,155,74,.11);
+    --grid:#31404f; --grid-2:#222e3b;
+    --fb:#a78bfa; --fb-bg:#26204a; --fb-line:#3b3170;
+    --chip:#1e2a36; --chip-line:#2a3846;
+    --auc1-bg:#1f2a36; --auc1-fg:#8b9cae;
+    --auc2-bg:#22374d; --auc2-fg:#9ec0e0;
+    --auc3-bg:#1f4368; --auc3-fg:#b6d6f2;
+    --auc4-bg:#1b5488; --auc4-fg:#d5e8fb;
+    --auc5-bg:#2f7fc4; --auc5-fg:#ffffff;
+    --auc6-bg:#68abea; --auc6-fg:#06243f;
+    --btn-fg:#06243f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 2px 12px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d141c; --card:#151f2a; --card-2:#1a2531; --card-3:#1f2b38;
+  --ink:#e6edf5; --ink-2:#9fb0c1; --ink-3:#6f8091;
+  --line:#243140; --line-2:#33424f;
+  --accent:#5ba3e8; --accent-soft:#16293e;
+  --ok:#3fbc86; --ok-bg:#0f3328;
+  --warn:#e0a244; --warn-bg:#372812;
+  --bad:#f07a72; --bad-bg:#3a1c1b;
+  --c-ms:#5ba3e8; --c-sc:#3fbfae; --c-ru:#e09b4a;
+  --tint-ms:rgba(91,163,232,.11); --tint-sc:rgba(63,191,174,.10); --tint-ru:rgba(224,155,74,.11);
+  --grid:#31404f; --grid-2:#222e3b;
+  --fb:#a78bfa; --fb-bg:#26204a; --fb-line:#3b3170;
+  --chip:#1e2a36; --chip-line:#2a3846;
+  --auc1-bg:#1f2a36; --auc1-fg:#8b9cae;
+  --auc2-bg:#22374d; --auc2-fg:#9ec0e0;
+  --auc3-bg:#1f4368; --auc3-fg:#b6d6f2;
+  --auc4-bg:#1b5488; --auc4-fg:#d5e8fb;
+  --auc5-bg:#2f7fc4; --auc5-fg:#ffffff;
+  --auc6-bg:#68abea; --auc6-fg:#06243f;
+  --btn-fg:#06243f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 2px 12px rgba(0,0,0,.25);
+}
+
+/* ============================================================ base */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0; font-weight:600; letter-spacing:-.015em; text-wrap:balance}
+button,input,select{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+
+.wrap{max-width:1460px; margin:0 auto; padding:0 22px 80px}
+
+/* ============================================================ header */
+.top{
+  border-bottom:1px solid var(--line); background:var(--card);
+  position:sticky; top:0; z-index:40; box-shadow:var(--shadow);
+}
+.top-in{max-width:1460px; margin:0 auto; padding:14px 22px; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+.brand{display:flex; align-items:baseline; gap:11px; margin-right:auto}
+.brand h1{font-size:18px}
+.brand .sub{font-size:12px; color:var(--ink-3); letter-spacing:.02em}
+.jump{display:flex; gap:4px; flex-wrap:wrap}
+.jump a{
+  font-size:12px; font-weight:500; color:var(--ink-2); text-decoration:none;
+  padding:5px 10px; border-radius:99px; border:1px solid transparent;
+}
+.jump a:hover{background:var(--card-3); color:var(--ink); border-color:var(--line)}
+.jump a[data-k="ms"]:hover{color:var(--c-ms)}
+.jump a[data-k="sc"]:hover{color:var(--c-sc)}
+.jump a[data-k="ru"]:hover{color:var(--c-ru)}
+.ghost{
+  background:transparent; border:1px solid var(--line-2); color:var(--ink-2);
+  padding:5px 11px; border-radius:var(--r-sm); font-size:12px; font-weight:500; cursor:pointer;
+}
+.ghost:hover{background:var(--card-3); color:var(--ink)}
+
+/* ============================================================ blocks */
+.block{scroll-margin-top:74px; margin-top:26px; background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden}
+.block-hd{display:flex; align-items:center; gap:12px; padding:15px 20px; border-bottom:1px solid var(--line); background:var(--card-2)}
+.block-hd .bar{width:4px; align-self:stretch; border-radius:2px; background:var(--accent); margin:-3px 2px -3px 0}
+.block-hd h2{font-size:16px}
+.block-hd .eyebrow{
+  font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--ink-3); display:block; margin-bottom:1px;
+}
+.block-hd .meta{margin-left:auto; font-size:12px; color:var(--ink-3)}
+.block[data-k="ms"] .block-hd .bar{background:var(--c-ms)}
+.block[data-k="sc"] .block-hd .bar{background:var(--c-sc)}
+.block[data-k="ru"] .block-hd .bar{background:var(--c-ru)}
+.block-bd{padding:20px}
+
+.panel{background:var(--card-2); border:1px solid var(--line); border-radius:var(--r-sm); overflow:hidden}
+.panel-hd{
+  padding:10px 13px; border-bottom:1px solid var(--line); background:var(--card-3);
+  display:flex; align-items:center; gap:8px;
+}
+.panel-hd h3{font-size:12.5px; font-weight:600}
+.panel-hd .tag{margin-left:auto; font-size:11px; color:var(--ink-3)}
+.panel-bd{padding:12px 13px}
+
+.grid{display:grid; gap:16px}
+.g-radars{grid-template-columns:minmax(320px,.78fr) minmax(430px,1.22fr)}
+.g-top3{grid-template-columns:minmax(330px,1.3fr) minmax(225px,1fr) minmax(225px,1fr)}
+.g-ru-top{grid-template-columns:minmax(320px,1.4fr) minmax(185px,.72fr) minmax(245px,1.08fr) minmax(200px,.8fr)}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(158px,1fr))}
+@media (max-width:1180px){
+  .g-radars,.g-top3,.g-ru-top{grid-template-columns:1fr}
+  .g5{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:620px){ .g5{grid-template-columns:1fr} .wrap{padding:0 12px 60px} }
+/* cabeçalho alto demais para ficar fixo em tela estreita */
+@media (max-width:860px){ .top{position:static} .block{scroll-margin-top:12px} }
+
+/* ============================================================ sources */
+.src-grid{display:grid; gap:14px; grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){.src-grid{grid-template-columns:1fr}}
+.src{border:1px solid var(--line); border-radius:var(--r-sm); background:var(--card-2); overflow:hidden; display:flex; flex-direction:column}
+.src-hd{padding:12px 14px 10px; border-bottom:1px dashed var(--line)}
+.src-hd .n{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:600; letter-spacing:.06em;
+  color:var(--ink-3); display:block;
+}
+.src-hd h3{font-size:14.5px; margin-top:2px}
+.src-hd p{margin:5px 0 0; font-size:11.5px; color:var(--ink-3); line-height:1.45}
+.src[data-k="ms"] .src-hd .n{color:var(--c-ms)}
+.src[data-k="sc"] .src-hd .n{color:var(--c-sc)}
+.src[data-k="ru"] .src-hd .n{color:var(--c-ru)}
+.drop{
+  margin:12px 14px 14px; padding:18px 12px; border:1.5px dashed var(--line-2); border-radius:var(--r-sm);
+  background:var(--card); text-align:center; cursor:pointer; transition:border-color .15s, background .15s;
+  display:block; flex:1;
+}
+.drop:hover,.drop.over{border-color:var(--accent); background:var(--accent-soft)}
+.drop .ico{font-size:19px; opacity:.55; display:block; margin-bottom:5px}
+.drop .t{display:block; font-size:12.5px; font-weight:500}
+.drop .h{display:block; font-size:11px; color:var(--ink-3); margin-top:3px}
+.src.ok .drop{border-style:solid; border-color:color-mix(in srgb,var(--ok) 45%,transparent); background:var(--ok-bg)}
+.src.err .drop{border-style:solid; border-color:color-mix(in srgb,var(--bad) 50%,transparent); background:var(--bad-bg)}
+.src-msg{padding:0 14px 13px; font-size:11.5px; line-height:1.5}
+.src-msg.err{color:var(--bad)}
+.src-msg.ok{color:var(--ok)}
+.src-msg b{font-weight:600}
+.src-msg ul{margin:5px 0 0; padding-left:16px}
+
+.banner{
+  margin-top:14px; padding:10px 13px; border-radius:var(--r-sm); font-size:12.5px;
+  background:var(--warn-bg); color:var(--warn); border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+}
+
+/* ============================================================ kpi */
+.kpi{background:var(--card-2); border:1px solid var(--line); border-radius:var(--r-sm); padding:12px 14px}
+.kpi .l{font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3)}
+.kpi .v{font-family:"IBM Plex Mono",monospace; font-size:23px; font-weight:600; margin-top:4px; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.kpi .d{font-size:11.5px; color:var(--ink-3); margin-top:2px}
+.kpi.alert .v{color:var(--bad)}
+
+/* ============================================================ chips */
+.chip{
+  display:inline-flex; align-items:center; justify-content:center; gap:3px;
+  font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:600; letter-spacing:.02em;
+  padding:1px 5px; border-radius:4px; border:1px solid var(--chip-line); background:var(--chip); color:var(--ink-2);
+  white-space:nowrap; line-height:1.6; font-variant-numeric:tabular-nums;
+}
+.chip.cb{background:var(--chip); color:var(--ink-3); border-color:var(--chip-line)}
+.chip.fb{background:var(--fb-bg); color:var(--fb); border-color:var(--fb-line)}
+.chip.fb.alert{background:var(--bad); color:#fff; border-color:var(--bad); box-shadow:0 0 0 2px color-mix(in srgb,var(--bad) 20%,transparent)}
+.chip.auc1{background:var(--auc1-bg); color:var(--auc1-fg); border-color:transparent}
+.chip.auc2{background:var(--auc2-bg); color:var(--auc2-fg); border-color:transparent}
+.chip.auc3{background:var(--auc3-bg); color:var(--auc3-fg); border-color:transparent}
+.chip.auc4{background:var(--auc4-bg); color:var(--auc4-fg); border-color:transparent}
+.chip.auc5{background:var(--auc5-bg); color:var(--auc5-fg); border-color:transparent}
+.chip.auc6{background:var(--auc6-bg); color:var(--auc6-fg); border-color:transparent}
+.chip.pts{background:var(--bad-bg); color:var(--bad); border-color:color-mix(in srgb,var(--bad) 28%,transparent)}
+.chip.pts.hi{background:var(--bad); color:#fff; border-color:var(--bad)}
+.chip.yes{background:var(--ok-bg); color:var(--ok); border-color:color-mix(in srgb,var(--ok) 28%,transparent)}
+.chip.no{background:var(--chip); color:var(--ink-3)}
+.chip.w{background:var(--warn-bg); color:var(--warn); border-color:color-mix(in srgb,var(--warn) 28%,transparent)}
+
+.legend{display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:12px; font-size:11px; color:var(--ink-3); align-items:center}
+.legend .it{display:inline-flex; align-items:center; gap:5px}
+.legend .sw{width:11px; height:11px; border-radius:3px; display:inline-block}
+
+/* ============================================================ lists */
+.rows{max-height:392px; overflow-y:auto; overflow-x:hidden}
+.row{
+  display:flex; align-items:center; gap:7px; padding:5px 13px;
+  border-bottom:1px solid var(--grid-2); font-size:12.5px;
+}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--card-3)}
+.row .pos{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3);
+  width:20px; flex:0 0 20px; text-align:right; font-variant-numeric:tabular-nums;
+}
+.row .cod{
+  font-family:"IBM Plex Mono",monospace; font-size:12.5px; font-weight:500;
+  width:82px; flex:0 0 82px; cursor:pointer; border:0; background:none; padding:0; text-align:left; color:inherit;
+}
+.row .cod:hover{color:var(--accent); text-decoration:underline}
+.row .chips{display:flex; gap:4px; margin-left:auto; align-items:center}
+.row .val{
+  font-family:"IBM Plex Mono",monospace; font-size:12.5px; font-weight:600;
+  min-width:62px; text-align:right; font-variant-numeric:tabular-nums;
+}
+.row .val.due{color:var(--bad)}
+.row .val.soon{color:var(--warn)}
+.row .val.neg{color:var(--bad)}
+.row .bar{height:3px; border-radius:2px; background:var(--accent); opacity:.5; flex:0 0 auto}
+
+.mini{font-size:11px; color:var(--ink-3); padding:9px 13px 0; line-height:1.5}
+.empty{padding:26px 14px; text-align:center; color:var(--ink-3); font-size:12.5px}
+
+/* ============================================================ search */
+.search-wrap{margin-top:18px; border-top:1px solid var(--line); padding-top:18px}
+.search-bar{display:flex; gap:9px; align-items:center; flex-wrap:wrap}
+.search-bar input{
+  flex:1; min-width:210px; max-width:340px; padding:9px 12px; border-radius:var(--r-sm);
+  border:1px solid var(--line-2); background:var(--card); font-family:"IBM Plex Mono",monospace; font-size:13.5px;
+}
+.search-bar input:focus{border-color:var(--accent); outline:none; box-shadow:0 0 0 3px var(--accent-soft)}
+.btn{
+  background:var(--accent); color:#fff; border:0; padding:9px 16px; border-radius:var(--r-sm);
+  font-size:13px; font-weight:500; cursor:pointer;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn{color:var(--btn-fg)}
+
+.tbl-scroll{overflow-x:auto; margin-top:14px; border:1px solid var(--line); border-radius:var(--r-sm)}
+table.cli{border-collapse:collapse; font-size:12px; width:max-content; min-width:100%}
+table.cli th,table.cli td{padding:7px 11px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--grid-2)}
+table.cli th:first-child,table.cli td:first-child{text-align:left; position:sticky; left:0; background:var(--card-2); z-index:2}
+table.cli thead th{
+  font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--ink-2); background:var(--card-3); border-bottom:1px solid var(--line);
+}
+table.cli thead tr.grp th{
+  text-align:center; font-size:10.5px; letter-spacing:.09em; padding:7px 11px; border-bottom:1px solid var(--line);
+}
+table.cli thead tr.grp th.gms{background:var(--tint-ms); color:var(--c-ms)}
+table.cli thead tr.grp th.gsc{background:var(--tint-sc); color:var(--c-sc)}
+table.cli thead tr.grp th.gru{background:var(--tint-ru); color:var(--c-ru)}
+table.cli tbody td{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+table.cli td.gms{background:var(--tint-ms)}
+table.cli td.gsc{background:var(--tint-sc)}
+table.cli td.gru{background:var(--tint-ru)}
+table.cli tbody td.neg{color:var(--bad)}
+table.cli tbody td.pos{color:var(--ok)}
+
+/* ============================================================ ruptura table */
+.rup-tbl{width:100%; border-collapse:collapse; font-size:12.5px}
+.rup-tbl th{
+  text-align:left; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--ink-3); padding:8px 12px; border-bottom:1px solid var(--line); background:var(--card-3);
+}
+.rup-tbl td{padding:9px 12px; border-bottom:1px solid var(--grid-2); vertical-align:top}
+.rup-tbl tr:last-child td{border-bottom:0}
+.rup-tbl td.v{white-space:nowrap; font-weight:500}
+.rup-tbl td.c{white-space:nowrap; text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.codes{display:flex; flex-wrap:wrap; gap:4px}
+.codes button{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; padding:2px 6px; border-radius:4px;
+  border:1px solid var(--chip-line); background:var(--chip); color:var(--ink-2); cursor:pointer;
+}
+.codes button:hover{border-color:var(--accent); color:var(--accent)}
+.codes .none{font-size:11.5px; color:var(--ink-3); font-style:italic}
+
+/* ============================================================ radar */
+.radar-box{display:flex; flex-direction:column; align-items:center}
+svg.radar{width:100%; height:auto; display:block; max-width:780px}
+svg.radar .ring{fill:none; stroke:var(--grid-2); stroke-width:1}
+svg.radar .ring.outer{stroke:var(--grid)}
+svg.radar .spoke{stroke:var(--grid); stroke-width:1; opacity:.65}
+svg.radar .lbl{font-family:"IBM Plex Sans",sans-serif; font-size:10.5px; fill:var(--ink-2)}
+svg.radar .lbl.sm{font-size:9px}
+svg.radar .lblv{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600; fill:var(--ink)}
+svg.radar .lblv.sm{font-size:9.5px}
+svg.radar .tick{font-family:"IBM Plex Mono",monospace; font-size:8.5px; fill:var(--ink-3)}
+svg.radar .dot{stroke:var(--card); stroke-width:1.5}
+.seg{display:inline-flex; border:1px solid var(--line-2); border-radius:var(--r-sm); overflow:hidden; margin-left:auto}
+.seg button{background:var(--card); border:0; padding:4px 9px; font-size:11px; color:var(--ink-2); cursor:pointer}
+.seg button+button{border-left:1px solid var(--line-2)}
+.seg button[aria-pressed="true"]{background:var(--accent); color:var(--btn-fg)}
+.note{font-size:11px; color:var(--ink-3); line-height:1.5; margin-top:10px; max-width:62ch}
+
+.hidden{display:none !important}
+@media (prefers-reduced-motion:reduce){*{transition:none !important; animation:none !important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>Radar da Carteira</h1>
+      <span class="sub" id="ctx">Modelo de Servir · Saúde do Cliente · Ruptura</span>
+    </div>
+    <nav class="jump">
+      <a href="#fontes">Fontes</a>
+      <a href="#compilado">Compilado</a>
+      <a href="#b-ms" data-k="ms">Modelo de Servir</a>
+      <a href="#b-sc" data-k="sc">Saúde do Cliente</a>
+      <a href="#b-ru" data-k="ru">Ruptura</a>
+    </nav>
+    <button class="ghost" id="btn-clear" type="button">Limpar dados</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============================================ FONTES -->
+  <section class="block" id="fontes">
+    <div class="block-hd">
+      <span class="bar"></span>
+      <div><span class="eyebrow">Entrada</span><h2>Anexe os três relatórios</h2></div>
+      <span class="meta" id="fontes-meta">0 de 3 carregados</span>
+    </div>
+    <div class="block-bd">
+      <div class="src-grid" id="src-grid"></div>
+      <div id="banners"></div>
+    </div>
+  </section>
+
+  <!-- ============================================ COMPILADO -->
+  <section class="block" id="compilado">
+    <div class="block-hd">
+      <span class="bar"></span>
+      <div><span class="eyebrow">Visão consolidada</span><h2>Dados compilados</h2></div>
+      <span class="meta" id="comp-meta"></span>
+    </div>
+    <div class="block-bd" id="comp-bd">
+      <div class="empty">Anexe os relatórios acima para montar a visão consolidada.</div>
+    </div>
+  </section>
+
+  <!-- ============================================ MODELO DE SERVIR -->
+  <section class="block" id="b-ms" data-k="ms">
+    <div class="block-hd">
+      <span class="bar"></span>
+      <div><span class="eyebrow">Relatório 1</span><h2>Modelo de Servir</h2></div>
+      <span class="meta" id="ms-meta"></span>
+    </div>
+    <div class="block-bd" id="ms-bd">
+      <div class="empty">Aguardando o relatório Modelo de Servir.</div>
+    </div>
+  </section>
+
+  <!-- ============================================ SAÚDE DO CLIENTE -->
+  <section class="block" id="b-sc" data-k="sc">
+    <div class="block-hd">
+      <span class="bar"></span>
+      <div><span class="eyebrow">Relatório 2</span><h2>Saúde do Cliente</h2></div>
+      <span class="meta" id="sc-meta"></span>
+    </div>
+    <div class="block-bd" id="sc-bd">
+      <div class="empty">Aguardando o relatório Saúde do Cliente.</div>
+    </div>
+  </section>
+
+  <!-- ============================================ RUPTURA -->
+  <section class="block" id="b-ru" data-k="ru">
+    <div class="block-hd">
+      <span class="bar"></span>
+      <div><span class="eyebrow">Relatório 3</span><h2>Ruptura</h2></div>
+      <span class="meta" id="ru-meta"></span>
+    </div>
+    <div class="block-bd" id="ru-bd">
+      <div class="empty">Aguardando o relatório Ruptura.</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+
+/* ==========================================================================
+   1. Leitor de .xlsx  —  ZIP (central directory) + inflate nativo + XML
+   ========================================================================== */
+
+async function unzip(u8){
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  let eocd = -1;
+  const min = Math.max(0, u8.length - 22 - 65535);
+  for (let i = u8.length - 22; i >= min; i--){
+    if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error("O arquivo não é um .xlsx (não foi possível ler o pacote ZIP).");
+  const count = dv.getUint16(eocd + 10, true);
+  let off = dv.getUint32(eocd + 16, true);
+  if (off === 0xFFFFFFFF) throw new Error("Arquivo ZIP64 não suportado. Reabra e salve no Excel como .xlsx.");
+  const dec = new TextDecoder("utf-8");
+  const entries = Object.create(null);
+  for (let n = 0; n < count; n++){
+    if (off + 46 > u8.length || dv.getUint32(off, true) !== 0x02014b50) break;
+    const method = dv.getUint16(off + 10, true);
+    const csize  = dv.getUint32(off + 20, true);
+    const nlen   = dv.getUint16(off + 28, true);
+    const elen   = dv.getUint16(off + 30, true);
+    const clen   = dv.getUint16(off + 32, true);
+    const lho    = dv.getUint32(off + 42, true);
+    const name   = dec.decode(u8.subarray(off + 46, off + 46 + nlen));
+    entries[name] = { method, csize, lho };
+    off += 46 + nlen + elen + clen;
+  }
+  return { u8, dv, entries };
+}
+
+async function zipText(zip, name){
+  const e = zip.entries[name];
+  if (!e) return null;
+  const { u8, dv } = zip;
+  if (dv.getUint32(e.lho, true) !== 0x04034b50) throw new Error("Pacote .xlsx corrompido.");
+  const nlen = dv.getUint16(e.lho + 26, true);
+  const elen = dv.getUint16(e.lho + 28, true);
+  const start = e.lho + 30 + nlen + elen;
+  const raw = u8.subarray(start, start + e.csize);
+  let bytes;
+  if (e.method === 0) bytes = raw;
+  else if (e.method === 8){
+    if (typeof DecompressionStream !== "function")
+      throw new Error("Este navegador não descompacta .xlsx. Use uma versão recente do Chrome, Edge ou Firefox.");
+    const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  } else throw new Error("Compressão ZIP não suportada (método " + e.method + ").");
+  return new TextDecoder("utf-8").decode(bytes).replace(/^﻿/, "");
+}
+
+function xmlDoc(text){
+  const doc = new DOMParser().parseFromString(text, "application/xml");
+  if (doc.getElementsByTagName("parsererror").length) throw new Error("XML interno do .xlsx ilegível.");
+  return doc;
+}
+const kids = (node, tag) => node.getElementsByTagNameNS("*", tag);
+
+function colIndex(ref){           // "BC12" -> 54
+  let n = 0;
+  for (let i = 0; i < ref.length; i++){
+    const c = ref.charCodeAt(i);
+    if (c < 65 || c > 90) break;
+    n = n * 26 + (c - 64);
+  }
+  return n - 1;
+}
+
+/** Lê a primeira planilha e devolve uma matriz de valores (string|number|null). */
+async function readXlsx(file){
+  const zip = await unzip(new Uint8Array(await file.arrayBuffer()));
+  let sheetPath = Object.keys(zip.entries).find(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n));
+  if (!sheetPath) throw new Error("Nenhuma planilha encontrada dentro do arquivo.");
+  sheetPath = Object.keys(zip.entries)
+    .filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n))
+    .sort((a,b) => (+a.match(/\d+/)[0]) - (+b.match(/\d+/)[0]))[0];
+
+  // shared strings (opcional — a exportação do Hub usa inlineStr)
+  let sst = [];
+  const sstText = await zipText(zip, "xl/sharedStrings.xml");
+  if (sstText){
+    const d = xmlDoc(sstText);
+    sst = Array.from(kids(d, "si")).map(si => Array.from(kids(si, "t")).map(t => t.textContent).join(""));
+  }
+
+  const doc = xmlDoc(await zipText(zip, sheetPath));
+  const matrix = [];
+  for (const row of kids(doc, "row")){
+    const cells = row.getElementsByTagNameNS("*", "c");
+    const out = [];
+    let auto = 0;
+    for (const c of cells){
+      const ref = c.getAttribute("r");
+      const idx = ref ? colIndex(ref) : auto;
+      auto = idx + 1;
+      while (out.length < idx) out.push(null);
+      const t = c.getAttribute("t");
+      let v = null;
+      if (t === "inlineStr"){
+        const is = kids(c, "is")[0];
+        v = is ? Array.from(kids(is, "t")).map(x => x.textContent).join("") : "";
+      } else {
+        const ve = kids(c, "v")[0];
+        const raw = ve ? ve.textContent : null;
+        if (raw === null || raw === "") v = null;
+        else if (t === "s") v = sst[+raw] ?? "";
+        else if (t === "str" || t === "e") v = raw;
+        else if (t === "b") v = raw === "1" ? 1 : 0;
+        else { const n = Number(raw); v = Number.isFinite(n) ? n : raw; }
+      }
+      out.push(v);
+    }
+    matrix.push(out);
+  }
+  return matrix;
+}
+
+/* ==========================================================================
+   2. Especificação dos três relatórios + validação
+   ========================================================================== */
+
+const norm = s => String(s ?? "")
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+const BASE = ["Ano Mês","Cód. Assessor","Nome Assessor","Cód. Conta","Modelo","AuC"];
+
+const SPECS = {
+  ms: {
+    id:"ms", n:"01", nome:"Modelo de Servir", cor:"var(--c-ms)",
+    dica:"Colunas 0/1 das seis variáveis, Índice Modelo de Servir e os cinco campos de dias até vencimento.",
+    cols: BASE.concat([
+      "Financial Planning","Open Investment","Conta Acessada","Ordem Enviada","XPerformance","Ativ. de Relacionamento",
+      "Índice Modelo de Servir",
+      "Dias até Vencimento FP","Dias até Vencimento Conta Acessada","Dias até Vencimento Ordem Enviada",
+      "Dias até Vencimento XPerformance","Dias até Vencimento Ativ. Crítica Tratada"
+    ])
+  },
+  sc: {
+    id:"sc", n:"02", nome:"Saúde do Cliente", cor:"var(--c-sc)",
+    dica:"Pontuações de Aportes, Variação de AuC, Rentabilidade, Cross-Sell e Aderência, mais os valores brutos.",
+    cols: BASE.concat([
+      "Pontuação Aportes","Pontuação Variação de AuC","Pontuação Rentabilidade","Pontuação Cross-Sell","Pontuação Aderência",
+      "Índice de Saúde do Cliente",
+      "Variação de AuC","Quantidade de meses com Aporte nos U12M","Rentabilidade Bruta Relativa ao CDI",
+      "Quantidade de Produtos Cross-Sell","Aderência"
+    ])
+  },
+  ru: {
+    id:"ru", n:"03", nome:"Ruptura", cor:"var(--c-ru)",
+    dica:"As sete sinalizações 0/1, a Pontuação Ruptura e os meses acumulados em ruptura.",
+    cols: BASE.concat([
+      "NPS Detrator","STVM Out","Controle de Alocação","Monoproduto Cross-Sell","Sem Aportes",
+      "Rentabilidade Negativa","Sem Ordem","Pontuação Ruptura","Meses em Ruptura"
+    ])
+  }
+};
+const ORDER = ["ms","sc","ru"];
+
+/** Acha a linha de cabeçalho e mapeia nome normalizado -> índice de coluna. */
+function findHeader(matrix, spec){
+  const want = spec.cols.map(norm);
+  let best = { score:-1, row:-1, map:null };
+  const limit = Math.min(matrix.length, 12);
+  for (let r = 0; r < limit; r++){
+    const map = Object.create(null);
+    matrix[r].forEach((cell, i) => {
+      const k = norm(cell);
+      if (k && !(k in map)) map[k] = i;
+    });
+    const score = want.filter(w => w in map).length;
+    if (score > best.score) best = { score, row:r, map };
+  }
+  return best;
+}
+
+function validate(matrix, spec){
+  const hit = findHeader(matrix, spec);
+  const missing = spec.cols.filter(c => !(norm(c) in (hit.map || {})));
+
+  if (missing.length){
+    // O arquivo é de outro relatório?
+    let guess = null, gScore = 0;
+    for (const k of ORDER){
+      if (k === spec.id) continue;
+      const other = SPECS[k];
+      const h = findHeader(matrix, other);
+      const dist = other.cols.slice(6).map(norm);
+      const s = dist.filter(d => d in (h.map || {})).length / dist.length;
+      if (s > gScore){ gScore = s; guess = other.nome; }
+    }
+    return { ok:false, missing, guess: gScore >= .7 ? guess : null };
+  }
+
+  const idx = {};
+  spec.cols.forEach(c => { idx[c] = hit.map[norm(c)]; });
+  const rows = [];
+  for (let r = hit.row + 1; r < matrix.length; r++){
+    const conta = matrix[r][idx["Cód. Conta"]];
+    const cod = typeof conta === "number" ? conta : (typeof conta === "string" && /^\d+$/.test(conta.trim()) ? +conta.trim() : null);
+    if (cod === null) continue;                       // pula linha vazia e rodapé "Filtros aplicados"
+    const o = { cod: String(cod) };
+    spec.cols.forEach(c => { o[c] = matrix[r][idx[c]]; });
+    rows.push(o);
+  }
+  if (!rows.length) return { ok:false, missing:[], guess:null, vazio:true };
+  return { ok:true, rows };
+}
+
+/* ==========================================================================
+   3. Estado
+   ========================================================================== */
+
+const S = { ms:null, sc:null, ru:null, files:{}, ruInvert:true, cliente:null };
+const LS = "radar-carteira-v1";
+
+function persist(){
+  try{
+    localStorage.setItem(LS, JSON.stringify({
+      ms:S.ms, sc:S.sc, ru:S.ru, files:S.files, cliente:S.cliente
+    }));
+  }catch(e){ /* base grande demais para o localStorage — segue sem cache */ }
+}
+function restore(){
+  try{
+    const raw = localStorage.getItem(LS); if (!raw) return;
+    const d = JSON.parse(raw);
+    ORDER.forEach(k => { if (Array.isArray(d[k])) S[k] = d[k]; });
+    S.files = d.files || {};
+    S.cliente = d.cliente || null;
+  }catch(e){ /* cache inválido, ignora */ }
+}
+
+/* ==========================================================================
+   4. Formatação e chips
+   ========================================================================== */
+
+const num = v => (typeof v === "number" && Number.isFinite(v)) ? v
+  : (typeof v === "string" && v.trim() !== "" && Number.isFinite(+v.replace(/\./g,"").replace(",",".").replace("%",""))
+      ? +v.replace(/\./g,"").replace(",",".").replace("%","") : null);
+
+const pct = v => {                                  // "46,9%" | 0.469 | 46.9  ->  46.9
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "string"){
+    const n = num(v);
+    return n === null ? null : n;                   // string já vem em pontos percentuais
+  }
+  const n = num(v);
+  return n === null ? null : (Math.abs(n) <= 1.5 ? n * 100 : n);
+};
+
+const f1  = n => n === null ? "—" : n.toLocaleString("pt-BR",{minimumFractionDigits:1, maximumFractionDigits:1});
+const f0  = n => n === null ? "—" : n.toLocaleString("pt-BR",{maximumFractionDigits:0});
+const fp1 = n => n === null ? "—" : f1(n) + "%";
+/** Percentual quando numérico; senão devolve o próprio rótulo do relatório
+    (ex.: "Conta Sem Aderência"), para não perder a informação. */
+const fpct = v => { const n = pct(v);
+  if (n !== null) return fp1(n);
+  const t = String(v ?? "").trim();
+  return t ? esc(t) : "—"; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function fMoney(v){
+  const n = num(v); if (n === null) return "—";
+  if (Math.abs(n) >= 1e6) return "R$ " + (n/1e6).toLocaleString("pt-BR",{maximumFractionDigits:2}) + " Mi";
+  if (Math.abs(n) >= 1e3) return "R$ " + (n/1e3).toLocaleString("pt-BR",{maximumFractionDigits:0}) + " mil";
+  return "R$ " + n.toLocaleString("pt-BR",{maximumFractionDigits:0});
+}
+
+const AUC = [
+  { max:1e5,  lv:1, t:"-100"  },
+  { max:3e5,  lv:2, t:"+100"  },
+  { max:1e6,  lv:3, t:"+300"  },
+  { max:3e6,  lv:4, t:"+1Mi"  },
+  { max:1e7,  lv:5, t:"+3Mi"  },
+  { max:Infinity, lv:6, t:"+10Mi" }
+];
+const aucBand = v => { const n = num(v) ?? 0; return AUC.find(b => n < b.max) || AUC[5]; };
+const aucChip = v => { const b = aucBand(v);
+  return `<span class="chip auc${b.lv}" title="AuC ${fMoney(v)}">${b.t}</span>`; };
+
+const isFB = m => /fee/i.test(String(m || ""));
+const modChip = (m, alerta) => isFB(m)
+  ? `<span class="chip fb${alerta ? " alert" : ""}" title="FEE BASED">FB</span>`
+  : `<span class="chip cb" title="COMISSION BASED">CB</span>`;
+
+/* ==========================================================================
+   5. Radar (SVG)
+   ========================================================================== */
+
+function wrapText(s, max){
+  const words = String(s).split(/\s+/), lines = []; let cur = "";
+  for (const w of words){
+    if (!cur) cur = w;
+    else if ((cur + " " + w).length <= max) cur += " " + w;
+    else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+/**
+ * axes   : [{ label, value(0..100), title? }]
+ * groups : [{ label, color, tint, from, to }]  (índices inclusivos)
+ */
+function radarSVG(axes, opts){
+  const o = Object.assign({ groups:[], w:700, h:600, color:"var(--accent)", small:false, wrapAt:14 }, opts);
+  const N = axes.length;
+  const cx = o.w/2, cy = o.h/2 + (o.small ? 4 : 0);
+  const R  = Math.min(o.w, o.h)/2 - (o.small ? 96 : 78);
+  const step = (Math.PI*2)/N;
+  const ang = i => -Math.PI/2 + i*step;
+  const P = (i, r) => [cx + Math.cos(ang(i))*r, cy + Math.sin(ang(i))*r];
+  const poly = r => Array.from({length:N}, (_, i) => P(i, r).map(n => n.toFixed(1)).join(",")).join(" ");
+
+  let s = `<svg class="radar" viewBox="0 0 ${o.w} ${o.h}" role="img" xmlns="http://www.w3.org/2000/svg">`;
+
+  // setores de fundo por relatório
+  for (const g of o.groups){
+    const a0 = ang(g.from) - step/2, a1 = ang(g.to) + step/2;
+    const x0 = cx + Math.cos(a0)*R, y0 = cy + Math.sin(a0)*R;
+    const x1 = cx + Math.cos(a1)*R, y1 = cy + Math.sin(a1)*R;
+    const large = (a1 - a0) > Math.PI ? 1 : 0;
+    s += `<path d="M ${cx} ${cy} L ${x0.toFixed(1)} ${y0.toFixed(1)} A ${R} ${R} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z" fill="${g.tint}"></path>`;
+  }
+
+  // grade
+  for (const lv of [20,40,60,80,100])
+    s += `<polygon class="ring${lv===100?" outer":""}" points="${poly(R*lv/100)}"></polygon>`;
+  for (let i = 0; i < N; i++){
+    const [x,y] = P(i, R);
+    s += `<line class="spoke" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"></line>`;
+  }
+  for (const lv of [20,60,100])
+    s += `<text class="tick" x="${cx+4}" y="${(cy - R*lv/100 + 3).toFixed(1)}">${lv}</text>`;
+
+  // série
+  const vals = axes.map(a => Math.max(0, Math.min(100, a.value ?? 0)));
+  const pts = vals.map((v,i) => P(i, R*v/100).map(n => n.toFixed(1)).join(",")).join(" ");
+  s += `<polygon points="${pts}" fill="${o.color}" fill-opacity=".17" stroke="${o.color}" stroke-width="2" stroke-linejoin="round"></polygon>`;
+  vals.forEach((v,i) => {
+    const [x,y] = P(i, R*v/100);
+    const c = o.groups.find(g => i >= g.from && i <= g.to);
+    s += `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${o.small?3:3.6}" fill="${c ? c.color : o.color}"><title>${esc(axes[i].title || axes[i].label)}: ${f1(v)}</title></circle>`;
+  });
+
+  // rótulos
+  const lh = o.small ? 12 : 13.5;
+  const Rl = R + (o.small ? 20 : 24);
+  axes.forEach((a,i) => {
+    const A = ang(i), cos = Math.cos(A), sin = Math.sin(A);
+    const x = cx + cos*Rl, y = cy + sin*Rl;
+    const anchor = cos > .2 ? "start" : cos < -.2 ? "end" : "middle";
+    const lines = wrapText(a.label, o.wrapAt);
+    const n = lines.length + 1;
+    let y0;
+    if (sin < -.35)      y0 = y - (n-1)*lh - 2;
+    else if (sin > .35)  y0 = y + lh;
+    else                 y0 = y - (n-1)*lh/2 + 3;
+    const cls = o.small ? " sm" : "";
+    lines.forEach((ln,k) => {
+      s += `<text class="lbl${cls}" x="${x.toFixed(1)}" y="${(y0 + k*lh).toFixed(1)}" text-anchor="${anchor}">${esc(ln)}</text>`;
+    });
+    const gc = o.groups.find(g => i >= g.from && i <= g.to);
+    s += `<text class="lblv${cls}" x="${x.toFixed(1)}" y="${(y0 + lines.length*lh).toFixed(1)}" text-anchor="${anchor}"${gc?` fill="${gc.color}"`:""}>${f1(vals[i])}</text>`;
+  });
+
+  return s + "</svg>";
+}
+
+/* ==========================================================================
+   6. Blocos de conteúdo
+   ========================================================================== */
+
+const byCod = k => { const m = new Map(); (S[k]||[]).forEach(r => m.set(r.cod, r)); return m; };
+const mean = arr => { const v = arr.filter(x => x !== null && Number.isFinite(x)); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; };
+
+const VARS_MS = ["Financial Planning","Open Investment","Conta Acessada","Ordem Enviada","XPerformance","Ativ. de Relacionamento"];
+const LBL_MS  = ["Fin. Planning","Open Investment","Conta Acessada","Ordem Enviada","XPerformance","Ativ. Relacionamento"];
+const VARS_SC = ["Pontuação Aportes","Pontuação Variação de AuC","Pontuação Rentabilidade","Pontuação Cross-Sell","Pontuação Aderência"];
+const LBL_SC  = ["Aportes","Variação de AuC","Rentabilidade","Cross-Sell","Aderência"];
+const VARS_RU = ["NPS Detrator","STVM Out","Controle de Alocação","Monoproduto Cross-Sell","Sem Aportes","Rentabilidade Negativa","Sem Ordem"];
+const PESO_RU = { "NPS Detrator":2, "STVM Out":1, "Controle de Alocação":2, "Monoproduto Cross-Sell":2,
+                  "Sem Aportes":2, "Rentabilidade Negativa":1, "Sem Ordem":2 };
+const RU_MAX = Object.values(PESO_RU).reduce((a,b)=>a+b,0);   // 12
+const RU_CORTE = 6;
+
+const mediaMS = () => VARS_MS.map(v => (mean((S.ms||[]).map(r => num(r[v]) ?? 0)) ?? 0) * 100);
+const mediaSC = () => VARS_SC.map(v => mean((S.sc||[]).map(r => num(r[v]))) ?? 0);
+const mediaRU = () => VARS_RU.map(v => (mean((S.ru||[]).map(r => num(r[v]) ?? 0)) ?? 0) * 100);
+const ptsRuptura = r => VARS_RU.reduce((a,v) => a + PESO_RU[v]*(num(r[v]) ?? 0), 0);
+
+/* -------------------------------------------------- linha de ranking */
+function linhaRank(r, i, valor, extra){
+  const alerta = extra && extra.alertaFB && isFB(r["Modelo"]);
+  return `<div class="row">
+    <span class="pos">${i+1}</span>
+    <button class="cod" data-cod="${esc(r.cod)}" type="button">${esc(r.cod)}</button>
+    <span class="chips">${modChip(r["Modelo"], alerta)}${aucChip(r["AuC"])}</span>
+    <span class="val${extra && extra.cls ? " "+extra.cls : ""}">${valor}</span>
+  </div>`;
+}
+
+function painel(titulo, tag, html, nota){
+  return `<div class="panel">
+    <div class="panel-hd"><h3>${titulo}</h3>${tag ? `<span class="tag">${tag}</span>` : ""}</div>
+    <div class="rows">${html || `<div class="empty">Sem dados.</div>`}</div>
+    ${nota ? `<div class="mini">${nota}</div>` : ""}
+  </div>`;
+}
+
+const LEGENDA_MODELO = `<div class="legend">
+  <span class="it"><span class="chip cb">CB</span> Comission Based</span>
+  <span class="it"><span class="chip fb">FB</span> Fee Based</span>
+  <span class="it"><span class="chip fb alert">FB</span> Fee Based em atenção</span>
+  <span class="it" style="margin-left:8px">Faixa de AuC:</span>
+  ${AUC.map(b => `<span class="it"><span class="chip auc${b.lv}">${b.t}</span></span>`).join("")}
+  <span class="it" style="color:var(--ink-3)">&lt;100 mil · 100–300 mil · 300 mil–1 Mi · 1–3 Mi · 3–10 Mi · &gt;10 Mi</span>
+</div>`;
+
+/* -------------------------------------------------- ranking genérico */
+function rankings(k, campo, rotulo){
+  const rows = (S[k]||[]).slice().filter(r => num(r[campo]) !== null);
+  const top  = rows.slice().sort((a,b) => num(b[campo]) - num(a[campo])).slice(0,20);
+  const bot  = rows.slice().sort((a,b) => num(a[campo]) - num(b[campo])).slice(0,20);
+  return { top, bot, html:
+    painel("20 melhores", rotulo, top.map((r,i) => linhaRank(r, i, f1(num(r[campo])))).join("")) +
+    "" , botHtml:
+    painel("20 piores", rotulo, bot.map((r,i) => linhaRank(r, i, f1(num(r[campo])), { alertaFB:true, cls:"neg" })).join(""))
+  };
+}
+
+/* -------------------------------------------------- Modelo de Servir */
+const DIAS_MS = [
+  ["Dias até Vencimento FP","Financial Planning"],
+  ["Dias até Vencimento Conta Acessada","Conta Acessada"],
+  ["Dias até Vencimento Ordem Enviada","Ordem Enviada"],
+  ["Dias até Vencimento XPerformance","XPerformance"],
+  ["Dias até Vencimento Ativ. Crítica Tratada","Ativ. Crítica Tratada"]
+];
+
+function renderMS(){
+  const el = document.getElementById("ms-bd");
+  if (!S.ms){ el.innerHTML = `<div class="empty">Aguardando o relatório Modelo de Servir.</div>`; document.getElementById("ms-meta").textContent = ""; return; }
+  const med = mediaMS();
+  const axes = LBL_MS.map((l,i) => ({ label:l, value:med[i], title:VARS_MS[i] }));
+  const rk = rankings("ms","Índice Modelo de Servir","Índice");
+
+  const listas = DIAS_MS.map(([col,nome]) => {
+    const rows = (S.ms||[]).map(r => ({ r, d: num(r[col]) ?? 0 })).sort((a,b) => a.d - b.d);
+    const html = rows.map(({r,d}) => {
+      const alerta = isFB(r["Modelo"]) && d < 15;
+      const cls = d <= 0 ? "due" : d < 15 ? "soon" : "";
+      return `<div class="row">
+        <button class="cod" data-cod="${esc(r.cod)}" type="button">${esc(r.cod)}</button>
+        <span class="chips">${isFB(r["Modelo"]) ? modChip(r["Modelo"], alerta) : ""}${aucChip(r["AuC"])}</span>
+        <span class="val ${cls}">${d <= 0 ? "Vencido" : d + " d"}</span>
+      </div>`;
+    }).join("");
+    const venc = rows.filter(x => x.d <= 0).length;
+    return painel(nome, `${venc} vencido${venc===1?"":"s"}`, html);
+  }).join("");
+
+  document.getElementById("ms-meta").textContent =
+    `${S.ms.length} clientes · índice médio ${f1(mean(S.ms.map(r => num(r["Índice Modelo de Servir"]))))}`;
+
+  el.innerHTML = `
+    <div class="grid g-top3">
+      <div class="panel"><div class="panel-hd"><h3>Aderência média por variável</h3><span class="tag">% da carteira em dia</span></div>
+        <div class="panel-bd radar-box">${radarSVG(axes, { w:480, h:430, color:"var(--c-ms)", wrapAt:12 })}</div></div>
+      ${rk.html}${rk.botHtml}
+    </div>
+    ${LEGENDA_MODELO}
+    <div class="grid g5" style="margin-top:18px">${listas}</div>
+    <p class="note">Dias até o vencimento em ordem crescente. Célula sem número conta como zero dia, ou seja, <b>vencido</b>. O selo <span class="chip fb alert">FB</span> marca cliente Fee Based com menos de 15 dias.</p>`;
+}
+
+/* -------------------------------------------------- Saúde do Cliente */
+const VAL_SC = [
+  { col:"Variação de AuC", nome:"Variação de AuC", fmt:fpct, neg:true },
+  { col:"Quantidade de meses com Aporte nos U12M", nome:"Meses com aporte (U12M)", fmt:v => v === null ? "—" : f0(v) + "/12" },
+  { col:"Rentabilidade Bruta Relativa ao CDI", nome:"Rentabilidade vs. CDI", fmt:fpct, neg:true },
+  { col:"Quantidade de Produtos Cross-Sell", nome:"Produtos Cross-Sell", fmt:v => v === null ? "—" : f0(v) },
+  { col:"Aderência", nome:"Aderência", fmt:fpct }
+];
+
+function renderSC(){
+  const el = document.getElementById("sc-bd");
+  if (!S.sc){ el.innerHTML = `<div class="empty">Aguardando o relatório Saúde do Cliente.</div>`; document.getElementById("sc-meta").textContent = ""; return; }
+  const med = mediaSC();
+  const axes = LBL_SC.map((l,i) => ({ label:l, value:med[i], title:VARS_SC[i] }));
+  const rk = rankings("sc","Índice de Saúde do Cliente","Índice");
+
+  const listas = VAL_SC.map(d => {
+    const rows = (S.sc||[]).map(r => {
+      const raw = r[d.col];
+      const v = d.col === "Aderência" || d.col === "Variação de AuC" || d.col === "Rentabilidade Bruta Relativa ao CDI"
+        ? pct(raw) : num(raw);
+      return { r, v, txt: d.fmt(raw) };
+    }).sort((a,b) => (a.v === null ? -1 : b.v === null ? 1 : a.v - b.v));
+    const html = rows.map(({r,v,txt}) => `<div class="row">
+      <button class="cod" data-cod="${esc(r.cod)}" type="button">${esc(r.cod)}</button>
+      <span class="chips">${isFB(r["Modelo"]) ? modChip(r["Modelo"]) : ""}${aucChip(r["AuC"])}</span>
+      <span class="val${d.neg && v !== null && v < 0 ? " neg" : ""}">${txt}</span>
+    </div>`).join("");
+    return painel(d.nome, "menor → maior", html);
+  }).join("");
+
+  document.getElementById("sc-meta").textContent =
+    `${S.sc.length} clientes · índice médio ${f1(mean(S.sc.map(r => num(r["Índice de Saúde do Cliente"]))))}`;
+
+  el.innerHTML = `
+    <div class="grid g-top3">
+      <div class="panel"><div class="panel-hd"><h3>Pontuação média por variável</h3><span class="tag">0 a 100</span></div>
+        <div class="panel-bd radar-box">${radarSVG(axes, { w:480, h:430, color:"var(--c-sc)", wrapAt:14 })}</div></div>
+      ${rk.html}${rk.botHtml}
+    </div>
+    ${LEGENDA_MODELO}
+    <div class="grid g5" style="margin-top:18px">${listas}</div>
+    <p class="note">Valores brutos das últimas colunas do relatório, em ordem crescente — o cliente mais frágil de cada variável aparece no topo.</p>`;
+}
+
+/* -------------------------------------------------- Ruptura */
+function renderRU(){
+  const el = document.getElementById("ru-bd");
+  if (!S.ru){ el.innerHTML = `<div class="empty">Aguardando o relatório Ruptura.</div>`; document.getElementById("ru-meta").textContent = ""; return; }
+  const med = mediaRU();
+  const axes = VARS_RU.map((v,i) => ({ label:v, value:med[i], title:`${v} (peso ${PESO_RU[v]})` }));
+
+  const comPts = (S.ru||[]).map(r => ({ r, p: ptsRuptura(r) })).filter(x => x.p > 0).sort((a,b) => b.p - a.p);
+  const emRup  = (S.ru||[]).filter(r => ptsRuptura(r) >= RU_CORTE);
+  const meses  = (S.ru||[]).map(r => ({ r, m: num(r["Meses em Ruptura"]) ?? 0 })).filter(x => x.m > 1).sort((a,b) => b.m - a.m);
+  const aucRup = emRup.reduce((a,r) => a + (num(r["AuC"]) ?? 0), 0);
+
+  const listaPts = comPts.map(({r,p}) => `<div class="row">
+    <button class="cod" data-cod="${esc(r.cod)}" type="button">${esc(r.cod)}</button>
+    <span class="chips">
+      <span class="chip pts${p >= RU_CORTE ? " hi" : ""}" title="${p} de ${RU_MAX} pontos">${p} pt${p===1?"":"s"}</span>
+      ${modChip(r["Modelo"], isFB(r["Modelo"]) && p >= RU_CORTE)}${aucChip(r["AuC"])}
+    </span></div>`).join("");
+
+  const listaMeses = meses.map(({r,m}) => `<div class="row">
+    <button class="cod" data-cod="${esc(r.cod)}" type="button">${esc(r.cod)}</button>
+    <span class="chips">${modChip(r["Modelo"])}${aucChip(r["AuC"])}</span>
+    <span class="val">${m} meses</span></div>`).join("");
+
+  const tabela = VARS_RU.map(v => {
+    const hits = (S.ru||[]).filter(r => (num(r[v]) ?? 0) === 1);
+    return `<tr>
+      <td class="v">${esc(v)}</td>
+      <td class="c"><span class="chip w">${PESO_RU[v]} pt${PESO_RU[v]===1?"":"s"}</span></td>
+      <td class="c">${hits.length}</td>
+      <td><div class="codes">${hits.length
+        ? hits.sort((a,b) => (num(b["AuC"])??0) - (num(a["AuC"])??0))
+              .map(r => `<button data-cod="${esc(r.cod)}" type="button" title="${esc(r["Modelo"]||"")} · ${fMoney(r["AuC"])}">${esc(r.cod)}</button>`).join("")
+        : `<span class="none">Nenhum cliente pontuando.</span>`}</div></td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("ru-meta").textContent =
+    `${S.ru.length} clientes · ${emRup.length} em ruptura · ${comPts.length} pontuando`;
+
+  el.innerHTML = `
+    <div class="grid g-ru-top">
+      <div class="panel"><div class="panel-hd"><h3>Incidência por variável</h3><span class="tag">% da carteira</span></div>
+        <div class="panel-bd radar-box">${radarSVG(axes, { w:440, h:420, color:"var(--c-ru)", wrapAt:13 })}</div></div>
+
+      <div class="panel"><div class="panel-hd"><h3>Clientes em ruptura</h3></div>
+        <div class="panel-bd">
+          <div class="kpi alert" style="border:0; background:transparent; padding:0">
+            <div class="l">A partir de ${RU_CORTE} pontos</div>
+            <div class="v">${emRup.length}</div>
+            <div class="d">de ${S.ru.length} clientes · ${f1(emRup.length/S.ru.length*100)}% da carteira</div>
+          </div>
+          <div style="height:14px"></div>
+          <div class="kpi" style="border:0; background:transparent; padding:0">
+            <div class="l">AuC em ruptura</div>
+            <div class="v" style="font-size:19px">${fMoney(aucRup)}</div>
+            <div class="d">${meses.length} cliente${meses.length===1?"":"s"} com mais de um mês</div>
+          </div>
+          <div class="legend" style="margin-top:16px">
+            <span class="it"><span class="chip pts hi">6+</span> em ruptura</span>
+            <span class="it"><span class="chip pts">1–5</span> pontuando</span>
+          </div>
+        </div></div>
+
+      ${painel("Pontuação de ruptura", "maior → menor", listaPts, "Pesos: NPS Detrator, Controle de Alocação, Monoproduto Cross-Sell, Sem Aportes e Sem Ordem valem 2 pontos; STVM Out e Rentabilidade Negativa valem 1.")}
+      ${painel("Meses em ruptura", "acima de 1 mês", listaMeses)}
+    </div>
+    ${LEGENDA_MODELO}
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-hd"><h3>Clientes por variável</h3><span class="tag">quem marcou 1</span></div>
+      <div style="overflow-x:auto"><table class="rup-tbl">
+        <thead><tr><th>Variável</th><th style="text-align:right">Peso</th><th style="text-align:right">Clientes</th><th>Códigos (maior AuC primeiro)</th></tr></thead>
+        <tbody>${tabela}</tbody>
+      </table></div>
+    </div>`;
+}
+
+/* -------------------------------------------------- Compilado */
+function renderComp(){
+  const el = document.getElementById("comp-bd");
+  const meta = document.getElementById("comp-meta");
+  const prontos = ORDER.filter(k => S[k]);
+  if (!prontos.length){
+    el.innerHTML = `<div class="empty">Anexe os relatórios acima para montar a visão consolidada.</div>`;
+    meta.textContent = ""; return;
+  }
+
+  const gMS = S.ms ? mean(S.ms.map(r => num(r["Índice Modelo de Servir"]))) : null;
+  const gSC = S.sc ? mean(S.sc.map(r => num(r["Índice de Saúde do Cliente"]))) : null;
+  const ruMed = S.ru ? mean(S.ru.map(r => ptsRuptura(r))) : null;
+  const gRU = ruMed === null ? null : 100 - (ruMed / RU_MAX * 100);
+
+  const eixosGeral = [
+    { label:"Modelo de Servir", value:gMS ?? 0, title:"Índice Modelo de Servir médio" },
+    { label:"Saúde do Cliente", value:gSC ?? 0, title:"Índice de Saúde do Cliente médio" },
+    { label:"Ruptura (inverso)", value:gRU ?? 0, title:`100 − média de pontos de ruptura ÷ ${RU_MAX}` }
+  ];
+
+  // radar combinado
+  const medMS = S.ms ? mediaMS() : VARS_MS.map(() => 0);
+  const medSC = S.sc ? mediaSC() : VARS_SC.map(() => 0);
+  const medRUraw = S.ru ? mediaRU() : VARS_RU.map(() => 0);
+  const medRU = S.ruInvert ? medRUraw.map(v => 100 - v) : medRUraw;
+
+  const eixos = []
+    .concat(LBL_MS.map((l,i) => ({ label:l, value:medMS[i], title:`Modelo de Servir · ${VARS_MS[i]}` })))
+    .concat(LBL_SC.map((l,i) => ({ label:l, value:medSC[i], title:`Saúde do Cliente · ${VARS_SC[i]}` })))
+    .concat(VARS_RU.map((v,i) => ({ label:v, value:medRU[i],
+      title:`Ruptura · ${v} — ${f1(medRUraw[i])}% da carteira pontuando` })));
+
+  const grupos = [
+    { label:"Modelo de Servir", color:"var(--c-ms)", tint:"var(--tint-ms)", from:0, to:5 },
+    { label:"Saúde do Cliente", color:"var(--c-sc)", tint:"var(--tint-sc)", from:6, to:10 },
+    { label:"Ruptura",          color:"var(--c-ru)", tint:"var(--tint-ru)", from:11, to:17 }
+  ];
+
+  const base = S.ms || S.sc || S.ru;
+  const aucTot = base.reduce((a,r) => a + (num(r["AuC"]) ?? 0), 0);
+  const nFB = base.filter(r => isFB(r["Modelo"])).length;
+  const emRup = S.ru ? S.ru.filter(r => ptsRuptura(r) >= RU_CORTE).length : null;
+  const comp = String(base[0]["Ano Mês"] ?? "");
+  meta.textContent = comp.length === 6 ? `Competência ${comp.slice(4)}/${comp.slice(0,4)}` : "";
+
+  el.innerHTML = `
+    <div class="grid g-kpi">
+      <div class="kpi"><div class="l">Clientes</div><div class="v">${base.length}</div><div class="d">na base carregada</div></div>
+      <div class="kpi"><div class="l">AuC total</div><div class="v" style="font-size:19px">${fMoney(aucTot)}</div><div class="d">média ${fMoney(aucTot/base.length)}</div></div>
+      <div class="kpi"><div class="l">Fee Based</div><div class="v">${nFB}</div><div class="d">${f1(nFB/base.length*100)}% da carteira</div></div>
+      <div class="kpi"><div class="l">Modelo de Servir</div><div class="v">${f1(gMS)}</div><div class="d">índice médio</div></div>
+      <div class="kpi"><div class="l">Saúde do Cliente</div><div class="v">${f1(gSC)}</div><div class="d">índice médio</div></div>
+      <div class="kpi ${emRup ? "alert" : ""}"><div class="l">Em ruptura</div><div class="v">${emRup === null ? "—" : emRup}</div><div class="d">${ruMed === null ? "sem dados" : f1(ruMed) + " pts médios de " + RU_MAX}</div></div>
+    </div>
+
+    <div class="grid g-radars" style="margin-top:16px">
+      <div class="panel">
+        <div class="panel-hd"><h3>Índice geral do profissional</h3><span class="tag">0 a 100</span></div>
+        <div class="panel-bd radar-box">
+          ${radarSVG(eixosGeral, { w:470, h:400, color:"var(--accent)", wrapAt:16 })}
+          <p class="note">Ruptura entra <b>invertida</b> para que os três eixos leiam “quanto maior, melhor”: 100 significa nenhuma pontuação de ruptura na carteira. Média bruta atual: ${f1(ruMed)} de ${RU_MAX} pontos.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd"><h3>Todas as variáveis</h3>
+          <div class="seg" role="group" aria-label="Direção dos eixos de Ruptura">
+            <button type="button" id="ru-inv" aria-pressed="${S.ruInvert}">Ruptura invertida</button>
+            <button type="button" id="ru-raw" aria-pressed="${!S.ruInvert}">Ruptura bruta</button>
+          </div>
+        </div>
+        <div class="panel-bd radar-box">
+          ${radarSVG(eixos, { groups:grupos, w:760, h:660, color:"var(--accent)", small:true, wrapAt:13 })}
+          <div class="legend" style="justify-content:center">
+            ${grupos.map(g => `<span class="it"><span class="sw" style="background:${g.color}"></span>${g.label}</span>`).join("")}
+          </div>
+          <p class="note">${S.ruInvert
+            ? "Os sete eixos de Ruptura estão invertidos (100 = nenhum cliente pontuando), na mesma direção dos demais. Passe o mouse em cada ponto para ver o percentual bruto."
+            : "Os sete eixos de Ruptura estão em valor bruto: o percentual da carteira que pontua naquela variável — aqui, quanto <b>menor</b>, melhor."}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <div class="search-bar">
+        <label for="busca" style="font-size:12.5px; color:var(--ink-2); font-weight:500">Código do cliente</label>
+        <input id="busca" list="codigos" placeholder="ex.: ${esc(base[0].cod)}" autocomplete="off" inputmode="numeric">
+        <datalist id="codigos">${base.map(r => `<option value="${esc(r.cod)}"></option>`).join("")}</datalist>
+        <button class="btn" id="btn-busca" type="button">Consultar</button>
+        <span id="busca-msg" style="font-size:12px; color:var(--bad)"></span>
+      </div>
+      <div id="cliente-out"></div>
+    </div>`;
+
+  document.getElementById("ru-inv").onclick = () => { S.ruInvert = true;  renderComp(); };
+  document.getElementById("ru-raw").onclick = () => { S.ruInvert = false; renderComp(); };
+  const input = document.getElementById("busca");
+  const go = () => buscarCliente(input.value.trim());
+  document.getElementById("btn-busca").onclick = go;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+  input.addEventListener("change", go);
+  if (S.cliente) { input.value = S.cliente; buscarCliente(S.cliente, true); }
+}
+
+/* -------------------------------------------------- ficha do cliente */
+const COLS_CLI = {
+  ms: [
+    ["Financial Planning","bin"],["Open Investment","bin"],["Conta Acessada","bin"],["Ordem Enviada","bin"],
+    ["XPerformance","bin"],["Ativ. de Relacionamento","bin"],["Índice Modelo de Servir","idx"],
+    ["Dias até Vencimento FP","dias"],["Dias até Vencimento Conta Acessada","dias"],
+    ["Dias até Vencimento Ordem Enviada","dias"],["Dias até Vencimento XPerformance","dias"],
+    ["Dias até Vencimento Ativ. Crítica Tratada","dias"]
+  ],
+  sc: [
+    ["Pontuação Aportes","n1"],["Pontuação Variação de AuC","n1"],["Pontuação Rentabilidade","n1"],
+    ["Pontuação Cross-Sell","n1"],["Pontuação Aderência","n1"],["Índice de Saúde do Cliente","idx"],
+    ["Variação de AuC","pct"],["Quantidade de meses com Aporte nos U12M","n0"],
+    ["Rentabilidade Bruta Relativa ao CDI","pct"],["Quantidade de Produtos Cross-Sell","n0"],["Aderência","pct"]
+  ],
+  ru: [
+    ["NPS Detrator","bin"],["STVM Out","bin"],["Controle de Alocação","bin"],["Monoproduto Cross-Sell","bin"],
+    ["Sem Aportes","bin"],["Rentabilidade Negativa","bin"],["Sem Ordem","bin"],
+    ["Pontuação Ruptura","pts"],["Meses em Ruptura","n0"]
+  ]
+};
+const CURTO = {
+  "Financial Planning":"Fin. Planning","Ativ. de Relacionamento":"Ativ. Relac.","Índice Modelo de Servir":"Índice MS",
+  "Dias até Vencimento FP":"Dias FP","Dias até Vencimento Conta Acessada":"Dias Conta Ac.",
+  "Dias até Vencimento Ordem Enviada":"Dias Ordem","Dias até Vencimento XPerformance":"Dias XPerf.",
+  "Dias até Vencimento Ativ. Crítica Tratada":"Dias Ativ. Crít.",
+  "Pontuação Aportes":"Pont. Aportes","Pontuação Variação de AuC":"Pont. Var. AuC",
+  "Pontuação Rentabilidade":"Pont. Rentab.","Pontuação Cross-Sell":"Pont. Cross-Sell",
+  "Pontuação Aderência":"Pont. Aderência","Índice de Saúde do Cliente":"Índice Saúde",
+  "Quantidade de meses com Aporte nos U12M":"Meses c/ aporte","Rentabilidade Bruta Relativa ao CDI":"Rent. vs CDI",
+  "Quantidade de Produtos Cross-Sell":"Qtd Cross-Sell",
+  "Controle de Alocação":"Controle Aloc.","Monoproduto Cross-Sell":"Monoproduto",
+  "Rentabilidade Negativa":"Rent. Negativa","Pontuação Ruptura":"Pontuação"
+};
+
+function cell(val, tipo){
+  const n = num(val);
+  switch (tipo){
+    case "bin":  return n === 1 ? `<span class="chip yes">1</span>` : `<span class="chip no">0</span>`;
+    case "idx":  return `<b>${f1(n)}</b>`;
+    case "n1":   return f1(n);
+    case "n0":   return f0(n);
+    case "pct":  return fpct(val);
+    case "dias": return n === null ? `<span class="chip pts">vencido</span>` : (n <= 0 ? `<span class="chip pts">vencido</span>` : n + " d");
+    case "pts":  return n >= RU_CORTE ? `<span class="chip pts hi">${n}</span>` : (n > 0 ? `<span class="chip pts">${n}</span>` : `<span class="chip no">0</span>`);
+    default:     return esc(String(val ?? "—"));
+  }
+}
+
+function buscarCliente(cod, silencioso){
+  const out = document.getElementById("cliente-out");
+  const msg = document.getElementById("busca-msg");
+  if (!out) return;
+  if (!cod){ out.innerHTML = ""; msg.textContent = ""; S.cliente = null; persist(); return; }
+
+  const maps = { ms:byCod("ms"), sc:byCod("sc"), ru:byCod("ru") };
+  const achou = ORDER.some(k => maps[k].has(cod));
+  if (!achou){
+    out.innerHTML = "";
+    msg.textContent = `Cliente ${cod} não encontrado na base carregada.`;
+    return;
+  }
+  msg.textContent = "";
+  S.cliente = cod; persist();
+
+  const ref = maps.ms.get(cod) || maps.sc.get(cod) || maps.ru.get(cod);
+  const grupos = [
+    { k:"ms", cls:"gms", nome:"Modelo de Servir" },
+    { k:"sc", cls:"gsc", nome:"Saúde do Cliente" },
+    { k:"ru", cls:"gru", nome:"Ruptura" }
+  ];
+
+  const grpRow = `<tr class="grp"><th colspan="3">Identificação</th>` +
+    grupos.map(g => `<th class="${g.cls}" colspan="${COLS_CLI[g.k].length}">${g.nome}${maps[g.k].has(cod) ? "" : " (sem dados)"}</th>`).join("") + `</tr>`;
+  const hdRow = `<tr><th>Código</th><th>Modelo</th><th>AuC</th>` +
+    grupos.map(g => COLS_CLI[g.k].map(([c]) => `<th class="${g.cls}">${esc(CURTO[c] || c)}</th>`).join("")).join("") + `</tr>`;
+  const bodyRow = `<tr><td><b>${esc(cod)}</b></td><td>${modChip(ref["Modelo"])} ${esc(ref["Modelo"] || "—")}</td><td>${fMoney(ref["AuC"])} ${aucChip(ref["AuC"])}</td>` +
+    grupos.map(g => {
+      const r = maps[g.k].get(cod);
+      return COLS_CLI[g.k].map(([c,t]) => `<td class="${g.cls}">${r ? cell(r[c], t) : "—"}</td>`).join("");
+    }).join("") + `</tr>`;
+
+  out.innerHTML = `<div class="tbl-scroll"><table class="cli"><thead>${grpRow}${hdRow}</thead><tbody>${bodyRow}</tbody></table></div>
+    <p class="note">Sequência de colunas: Código · Modelo · AuC · variáveis do Modelo de Servir · variáveis da Saúde do Cliente · variáveis da Ruptura. Role a tabela na horizontal para ver tudo.</p>`;
+  if (!silencioso) out.scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+/* ==========================================================================
+   7. Fontes: dropzones, validação e mensagens
+   ========================================================================== */
+
+function srcCard(spec){
+  const f = S.files[spec.id];
+  const carregado = !!S[spec.id];
+  const erro = f && f.erro;
+  let msg = "";
+  if (erro){
+    msg = `<div class="src-msg err"><b>Este arquivo não confere com o relatório ${esc(spec.nome)}.</b>` +
+      (f.detalhe ? `<div style="margin-top:4px">${f.detalhe}</div>` : "") +
+      (f.missing && f.missing.length
+        ? `<ul>${f.missing.slice(0,6).map(m => `<li>${esc(m)}</li>`).join("")}${f.missing.length > 6 ? `<li>e mais ${f.missing.length-6} coluna(s)</li>` : ""}</ul>` : "") +
+      `</div>`;
+  } else if (carregado && f){
+    const comp = String((S[spec.id][0] || {})["Ano Mês"] ?? "");
+    msg = `<div class="src-msg ok"><b>${esc(f.nome)}</b> · ${S[spec.id].length} clientes` +
+      (comp.length === 6 ? ` · competência ${comp.slice(4)}/${comp.slice(0,4)}` : "") + `</div>`;
+  }
+  return `<div class="src ${erro ? "err" : carregado ? "ok" : ""}" data-k="${spec.id}">
+    <div class="src-hd">
+      <span class="n">RELATÓRIO ${spec.n}</span>
+      <h3>${esc(spec.nome)}</h3>
+      <p>${esc(spec.dica)}</p>
+    </div>
+    <label class="drop" data-k="${spec.id}">
+      <span class="ico" aria-hidden="true">${erro ? "⚠" : carregado ? "✓" : "⤓"}</span>
+      <span class="t">${carregado && !erro ? "Trocar arquivo" : "Anexar " + esc(spec.nome)}</span>
+      <span class="h">Arraste o .xlsx aqui ou clique para escolher</span>
+      <input type="file" accept=".xlsx,.xlsm" hidden data-k="${spec.id}">
+    </label>
+    ${msg}
+  </div>`;
+}
+
+function renderFontes(){
+  document.getElementById("src-grid").innerHTML = ORDER.map(k => srcCard(SPECS[k])).join("");
+  const n = ORDER.filter(k => S[k]).length;
+  document.getElementById("fontes-meta").textContent = `${n} de 3 carregados`;
+
+  // avisos cruzados
+  const av = [];
+  const comps = ORDER.filter(k => S[k]).map(k => String((S[k][0]||{})["Ano Mês"] ?? ""));
+  if (new Set(comps).size > 1)
+    av.push(`Os relatórios são de competências diferentes (${[...new Set(comps)].join(", ")}). Os números consolidados misturam períodos.`);
+  const sets = ORDER.filter(k => S[k]).map(k => new Set(S[k].map(r => r.cod)));
+  if (sets.length > 1){
+    const tot = new Set(sets.flatMap(s => [...s]));
+    const comum = [...tot].filter(c => sets.every(s => s.has(c)));
+    if (comum.length !== tot.size)
+      av.push(`As bases não têm exatamente os mesmos clientes: ${tot.size} códigos no total, ${comum.length} presentes nos três relatórios.`);
+  }
+  document.getElementById("banners").innerHTML = av.map(t => `<div class="banner">${t}</div>`).join("");
+}
+
+async function receber(k, file){
+  const spec = SPECS[k];
+  S.files[k] = { nome:file.name };
+  try{
+    if (!/\.(xlsx|xlsm)$/i.test(file.name)) throw new Error("Formato não suportado. Envie o arquivo .xlsx exportado pelo sistema.");
+    const matrix = await readXlsx(file);
+    const v = validate(matrix, spec);
+    if (!v.ok){
+      S[k] = null;
+      S.files[k] = { nome:file.name, erro:true, missing:v.missing,
+        detalhe: v.vazio
+          ? "O arquivo tem as colunas certas, mas nenhuma linha de cliente."
+          : (v.guess
+            ? `O conteúdo parece ser o relatório <b>${esc(v.guess)}</b>. Confira em qual campo você anexou. Faltam as colunas:`
+            : "Faltam as colunas abaixo:") };
+    } else {
+      S[k] = v.rows;
+      S.files[k] = { nome:file.name };
+    }
+  }catch(err){
+    S[k] = null;
+    S.files[k] = { nome:file.name, erro:true, missing:[], detalhe: esc(err.message || String(err)) };
+  }
+  persist();
+  renderTudo();
+}
+
+function renderTudo(){
+  renderFontes();
+  renderComp();
+  renderMS();
+  renderSC();
+  renderRU();
+  ORDER.forEach(k => {
+    const m = document.getElementById(k + "-meta");
+    if (!S[k] && m) m.textContent = "";
+  });
+}
+
+/* ==========================================================================
+   8. Wiring
+   ========================================================================== */
+
+document.addEventListener("change", e => {
+  const inp = e.target.closest('input[type="file"][data-k]');
+  if (inp && inp.files && inp.files[0]){ receber(inp.dataset.k, inp.files[0]); inp.value = ""; }
+});
+
+["dragenter","dragover"].forEach(ev => document.addEventListener(ev, e => {
+  const d = e.target.closest(".drop"); if (!d) return;
+  e.preventDefault(); d.classList.add("over");
+}));
+["dragleave","drop"].forEach(ev => document.addEventListener(ev, e => {
+  const d = e.target.closest(".drop"); if (!d) return;
+  d.classList.remove("over");
+}));
+document.addEventListener("drop", e => {
+  const d = e.target.closest(".drop"); if (!d) return;
+  e.preventDefault();
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) receber(d.dataset.k, f);
+});
+document.addEventListener("dragover", e => { if (e.target.closest(".drop")) e.preventDefault(); });
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-cod]");
+  if (!b || b.tagName !== "BUTTON") return;
+  const input = document.getElementById("busca");
+  if (input){ input.value = b.dataset.cod; buscarCliente(b.dataset.cod); }
+});
+
+document.getElementById("btn-clear").onclick = () => {
+  ORDER.forEach(k => S[k] = null);
+  S.files = {}; S.cliente = null;
+  try{ localStorage.removeItem(LS); }catch(e){}
+  renderTudo();
+};
+
+restore();
+renderTudo();
+</script>
+</body>
+</html>

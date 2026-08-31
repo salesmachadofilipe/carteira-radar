@@ -1,0 +1,6 @@
+# Nunca versionar relatórios: contêm dados de cliente.
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+dados.js
