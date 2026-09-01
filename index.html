@@ -30,6 +30,7 @@
   --auc6-bg:#0b4f9e; --auc6-fg:#ffffff;
   --btn-fg:#ffffff;
   --shadow:0 1px 2px rgba(16,26,38,.05), 0 2px 10px rgba(16,26,38,.05);
+  --sombra-tip:0 4px 22px rgba(16,26,38,.16);
   --r:12px; --r-sm:7px;
 }
 @media (prefers-color-scheme: dark){
@@ -54,6 +55,7 @@
     --auc6-bg:#68abea; --auc6-fg:#06243f;
     --btn-fg:#06243f;
     --shadow:0 1px 2px rgba(0,0,0,.3), 0 2px 12px rgba(0,0,0,.25);
+    --sombra-tip:0 4px 22px rgba(0,0,0,.55);
   }
 }
 :root[data-theme="dark"]{
@@ -77,6 +79,7 @@
   --auc6-bg:#68abea; --auc6-fg:#06243f;
   --btn-fg:#06243f;
   --shadow:0 1px 2px rgba(0,0,0,.3), 0 2px 12px rgba(0,0,0,.25);
+  --sombra-tip:0 4px 22px rgba(0,0,0,.55);
 }
 
 /* ============================================================ base */
@@ -187,6 +190,11 @@ button,input,select{font:inherit; color:inherit}
 .src-msg.ok{color:var(--ok)}
 .src-msg b{font-weight:600}
 .src-msg ul{margin:5px 0 0; padding-left:16px}
+.src-msg .restaurado{
+  display:inline-block; margin-top:3px; padding:1px 6px; border-radius:4px;
+  background:var(--warn-bg); color:var(--warn); font-size:10.5px; font-weight:600;
+  border:1px solid color-mix(in srgb,var(--warn) 28%,transparent);
+}
 
 .banner{
   margin-top:14px; padding:10px 13px; border-radius:var(--r-sm); font-size:12.5px;
@@ -321,7 +329,36 @@ svg.radar .lbl.sm{font-size:9px}
 svg.radar .lblv{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600; fill:var(--ink)}
 svg.radar .lblv.sm{font-size:9.5px}
 svg.radar .tick{font-family:"IBM Plex Mono",monospace; font-size:8.5px; fill:var(--ink-3)}
-svg.radar .dot{stroke:var(--card); stroke-width:1.5}
+svg.radar .dot{stroke:var(--card); stroke-width:1.5; cursor:pointer; transition:r .12s ease}
+svg.radar:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:6px}
+svg.radar .dot.on{stroke-width:2}
+svg.radar.ativo .serie{fill-opacity:.10}
+svg.radar .hl-wedge{fill:currentColor; opacity:0; pointer-events:none; transition:opacity .12s ease}
+svg.radar .hl-spoke{stroke-width:1.5; opacity:0; pointer-events:none; stroke-dasharray:3 3}
+svg.radar .hl-ring{fill:none; stroke-width:1.5; opacity:0; pointer-events:none}
+svg.radar.ativo .hl-wedge{opacity:.07}
+svg.radar.ativo .hl-spoke{opacity:.9}
+svg.radar.ativo .hl-ring{opacity:.55}
+svg.radar .cap{fill:transparent}
+
+/* ---------------------------------------------------------- tooltip */
+.radar-wrap{position:relative; width:100%; display:flex; justify-content:center}
+.rtip{
+  position:absolute; z-index:20; pointer-events:none;
+  display:flex; flex-direction:column; gap:1px;
+  min-width:132px; max-width:236px; padding:9px 11px;
+  background:var(--card); border:1px solid var(--line-2); border-radius:var(--r-sm);
+  box-shadow:var(--sombra-tip); line-height:1.35;
+}
+.rtip[hidden]{display:none}
+.rtip .rt-g{font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.08em}
+.rtip .rt-l{font-size:12.5px; font-weight:600; color:var(--ink); text-wrap:balance}
+.rtip .rt-v{
+  font-family:"IBM Plex Mono",monospace; font-size:19px; font-weight:600;
+  margin-top:3px; font-variant-numeric:tabular-nums; letter-spacing:-.02em;
+}
+.rtip .rt-v i{font-style:normal; font-size:11px; color:var(--ink-3); font-weight:400; margin-left:1px}
+.rtip .rt-d{font-size:11px; color:var(--ink-2); margin-top:2px}
 .seg{display:inline-flex; border:1px solid var(--line-2); border-radius:var(--r-sm); overflow:hidden; margin-left:auto}
 .seg button{background:var(--card); border:0; padding:4px 9px; font-size:11px; color:var(--ink-2); cursor:pointer}
 .seg button+button{border-left:1px solid var(--line-2)}
@@ -649,6 +686,8 @@ function restore(){
     const d = JSON.parse(raw);
     ORDER.forEach(k => { if (Array.isArray(d[k])) S[k] = d[k]; });
     S.files = d.files || {};
+    // sinaliza que estes dados vieram da sessão anterior, não de um anexo agora
+    ORDER.forEach(k => { if (S[k] && S.files[k]) S.files[k].cache = true; });
     S.cliente = d.cliente || null;
   }catch(e){ /* cache inválido, ignora */ }
 }
@@ -722,29 +761,36 @@ function wrapText(s, max){
 }
 
 /**
- * axes   : [{ label, value(0..100), title? }]
- * groups : [{ label, color, tint, from, to }]  (índices inclusivos)
+ * axes   : [{ label, nome?, value(0..100), detalhe? }]   label = texto curto no gráfico
+ * groups : [{ label, color, tint, from, to }]            índices inclusivos
  */
 function radarSVG(axes, opts){
   const o = Object.assign({ groups:[], w:700, h:600, color:"var(--accent)", small:false, wrapAt:14 }, opts);
   const N = axes.length;
   const cx = o.w/2, cy = o.h/2 + (o.small ? 4 : 0);
   const R  = Math.min(o.w, o.h)/2 - (o.small ? 96 : 78);
-  const step = (Math.PI*2)/N;
-  const ang = i => -Math.PI/2 + i*step;
+  const a0 = -Math.PI/2, step = (Math.PI*2)/N;
+  const ang = i => a0 + i*step;
   const P = (i, r) => [cx + Math.cos(ang(i))*r, cy + Math.sin(ang(i))*r];
   const poly = r => Array.from({length:N}, (_, i) => P(i, r).map(n => n.toFixed(1)).join(",")).join(" ");
+  const grupoDe = i => o.groups.find(g => i >= g.from && i <= g.to);
+  const corDe = i => { const g = grupoDe(i); return g ? g.color : o.color; };
 
-  let s = `<svg class="radar" viewBox="0 0 ${o.w} ${o.h}" role="img" xmlns="http://www.w3.org/2000/svg">`;
+  const resumo = axes.map((a,i) => `${a.nome || a.label} ${f1(Math.max(0, Math.min(100, a.value ?? 0)))} de 100`).join("; ");
+  let s = `<div class="radar-wrap"><svg class="radar" viewBox="0 0 ${o.w} ${o.h}" tabindex="0" role="img" aria-label="Gráfico radar. Use as setas para percorrer os eixos. ${esc(resumo)}" xmlns="http://www.w3.org/2000/svg">`;
+  s += `<rect class="cap" x="0" y="0" width="${o.w}" height="${o.h}"></rect>`;
 
   // setores de fundo por relatório
   for (const g of o.groups){
-    const a0 = ang(g.from) - step/2, a1 = ang(g.to) + step/2;
-    const x0 = cx + Math.cos(a0)*R, y0 = cy + Math.sin(a0)*R;
-    const x1 = cx + Math.cos(a1)*R, y1 = cy + Math.sin(a1)*R;
-    const large = (a1 - a0) > Math.PI ? 1 : 0;
+    const b0 = ang(g.from) - step/2, b1 = ang(g.to) + step/2;
+    const x0 = cx + Math.cos(b0)*R, y0 = cy + Math.sin(b0)*R;
+    const x1 = cx + Math.cos(b1)*R, y1 = cy + Math.sin(b1)*R;
+    const large = (b1 - b0) > Math.PI ? 1 : 0;
     s += `<path d="M ${cx} ${cy} L ${x0.toFixed(1)} ${y0.toFixed(1)} A ${R} ${R} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z" fill="${g.tint}"></path>`;
   }
+
+  // setor destacado no hover (posicionado via JS)
+  s += `<path class="hl-wedge" d=""></path>`;
 
   // grade
   for (const lv of [20,40,60,80,100])
@@ -756,14 +802,16 @@ function radarSVG(axes, opts){
   for (const lv of [20,60,100])
     s += `<text class="tick" x="${cx+4}" y="${(cy - R*lv/100 + 3).toFixed(1)}">${lv}</text>`;
 
+  s += `<line class="hl-spoke"></line>`;
+
   // série
   const vals = axes.map(a => Math.max(0, Math.min(100, a.value ?? 0)));
   const pts = vals.map((v,i) => P(i, R*v/100).map(n => n.toFixed(1)).join(",")).join(" ");
-  s += `<polygon points="${pts}" fill="${o.color}" fill-opacity=".17" stroke="${o.color}" stroke-width="2" stroke-linejoin="round"></polygon>`;
+  s += `<polygon class="serie" points="${pts}" fill="${o.color}" fill-opacity=".17" stroke="${o.color}" stroke-width="2" stroke-linejoin="round"></polygon>`;
+  s += `<circle class="hl-ring" r="${o.small?6.5:7.5}"></circle>`;
   vals.forEach((v,i) => {
     const [x,y] = P(i, R*v/100);
-    const c = o.groups.find(g => i >= g.from && i <= g.to);
-    s += `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${o.small?3:3.6}" fill="${c ? c.color : o.color}"><title>${esc(axes[i].title || axes[i].label)}: ${f1(v)}</title></circle>`;
+    s += `<circle class="dot" data-i="${i}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${o.small?3:3.6}" fill="${corDe(i)}"></circle>`;
   });
 
   // rótulos
@@ -783,11 +831,122 @@ function radarSVG(axes, opts){
     lines.forEach((ln,k) => {
       s += `<text class="lbl${cls}" x="${x.toFixed(1)}" y="${(y0 + k*lh).toFixed(1)}" text-anchor="${anchor}">${esc(ln)}</text>`;
     });
-    const gc = o.groups.find(g => i >= g.from && i <= g.to);
+    const gc = grupoDe(i);
     s += `<text class="lblv${cls}" x="${x.toFixed(1)}" y="${(y0 + lines.length*lh).toFixed(1)}" text-anchor="${anchor}"${gc?` fill="${gc.color}"`:""}>${f1(vals[i])}</text>`;
   });
 
-  return s + "</svg>";
+  s += `</svg><div class="rtip" role="status" aria-live="polite" hidden></div></div>`;
+
+  // metadados para a camada de interação
+  const meta = { w:o.w, cx, cy, R, a0, step,
+    eixos: axes.map((a,i) => {
+      const g = grupoDe(i);
+      return { label:a.nome || a.label, grupo:g ? g.label : null, cor:corDe(i),
+               valor:vals[i], detalhe:a.detalhe || null };
+    }) };
+  return s.replace('<svg class="radar"', `<svg class="radar" data-radar="${esc(JSON.stringify(meta))}"`);
+}
+
+/** Liga hover, toque e teclado nos radares recém-inseridos no DOM. */
+function ativarRadares(root){
+  (root || document).querySelectorAll(".radar-wrap").forEach(wrap => {
+    if (wrap.dataset.on) return;
+    wrap.dataset.on = "1";
+    const svg = wrap.querySelector("svg.radar");
+    const tip = wrap.querySelector(".rtip");
+    const m = JSON.parse(svg.dataset.radar);
+    const dots = [...svg.querySelectorAll(".dot")];
+    const wedge = svg.querySelector(".hl-wedge");
+    const spoke = svg.querySelector(".hl-spoke");
+    const ring  = svg.querySelector(".hl-ring");
+    const N = m.eixos.length;
+    let atual = -1;
+
+    function posicionar(clientX, clientY){
+      const wr = wrap.getBoundingClientRect();
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      let x = clientX - wr.left + 16, y = clientY - wr.top + 16;
+      if (x + tw > wr.width - 4)  x = clientX - wr.left - tw - 16;
+      if (y + th > wr.height - 4) y = clientY - wr.top - th - 16;
+      tip.style.left = Math.max(4, x) + "px";
+      tip.style.top  = Math.max(4, y) + "px";
+    }
+
+    function mostrar(i, clientX, clientY){
+      const e = m.eixos[i];
+      if (!e) return esconder();
+      if (i !== atual){
+        atual = i;
+        const b0 = m.a0 + (i - .5)*m.step, b1 = m.a0 + (i + .5)*m.step;
+        const x0 = m.cx + Math.cos(b0)*m.R, y0 = m.cy + Math.sin(b0)*m.R;
+        const x1 = m.cx + Math.cos(b1)*m.R, y1 = m.cy + Math.sin(b1)*m.R;
+        wedge.setAttribute("d", `M ${m.cx} ${m.cy} L ${x0.toFixed(1)} ${y0.toFixed(1)} A ${m.R} ${m.R} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`);
+        wedge.setAttribute("color", e.cor);
+
+        const ax = m.a0 + i*m.step;
+        spoke.setAttribute("x1", m.cx); spoke.setAttribute("y1", m.cy);
+        spoke.setAttribute("x2", (m.cx + Math.cos(ax)*m.R).toFixed(1));
+        spoke.setAttribute("y2", (m.cy + Math.sin(ax)*m.R).toFixed(1));
+        spoke.setAttribute("stroke", e.cor);
+
+        const rr = m.R * e.valor/100;
+        ring.setAttribute("cx", (m.cx + Math.cos(ax)*rr).toFixed(1));
+        ring.setAttribute("cy", (m.cy + Math.sin(ax)*rr).toFixed(1));
+        ring.setAttribute("stroke", e.cor);
+
+        svg.classList.add("ativo");
+        dots.forEach((d,k) => d.classList.toggle("on", k === i));
+
+        tip.innerHTML =
+          (e.grupo ? `<span class="rt-g" style="color:${e.cor}">${esc(e.grupo)}</span>` : "") +
+          `<span class="rt-l">${esc(e.label)}</span>` +
+          `<span class="rt-v" style="color:${e.cor}">${f1(e.valor)}<i>/100</i></span>` +
+          (e.detalhe ? `<span class="rt-d">${e.detalhe}</span>` : "");
+        tip.hidden = false;
+      }
+      posicionar(clientX, clientY);
+    }
+
+    function esconder(){
+      if (atual === -1) return;
+      atual = -1; tip.hidden = true;
+      svg.classList.remove("ativo");
+      dots.forEach(d => d.classList.remove("on"));
+    }
+
+    svg.addEventListener("pointermove", ev => {
+      const r = svg.getBoundingClientRect();
+      const k = r.width / m.w;
+      const dx = (ev.clientX - r.left)/k - m.cx;
+      const dy = (ev.clientY - r.top)/k  - m.cy;
+      if (Math.hypot(dx, dy) > m.R * 1.55) return esconder();
+      const i = Math.round((Math.atan2(dy, dx) - m.a0) / m.step);
+      mostrar(((i % N) + N) % N, ev.clientX, ev.clientY);
+    });
+    svg.addEventListener("pointerleave", esconder);
+    svg.addEventListener("pointercancel", esconder);
+
+    // teclado: setas percorrem os eixos, Esc fecha
+    function mostrarNoPonto(i){
+      const d = dots[i];
+      if (!d) return;
+      const r = d.getBoundingClientRect();
+      mostrar(i, r.left + r.width/2, r.top + r.height/2);
+    }
+    svg.addEventListener("keydown", ev => {
+      const k = ev.key;
+      if (k === "Escape"){ esconder(); svg.blur(); return; }
+      let i = null;
+      if (k === "ArrowRight" || k === "ArrowDown") i = atual === -1 ? 0 : (atual + 1) % N;
+      else if (k === "ArrowLeft" || k === "ArrowUp") i = atual === -1 ? N - 1 : (atual - 1 + N) % N;
+      else if (k === "Home") i = 0;
+      else if (k === "End") i = N - 1;
+      if (i === null) return;
+      ev.preventDefault();
+      mostrarNoPonto(i);
+    });
+    svg.addEventListener("blur", esconder);
+  });
 }
 
 /* ==========================================================================
@@ -811,6 +970,14 @@ const mediaMS = () => VARS_MS.map(v => (mean((S.ms||[]).map(r => num(r[v]) ?? 0)
 const mediaSC = () => VARS_SC.map(v => mean((S.sc||[]).map(r => num(r[v]))) ?? 0);
 const mediaRU = () => VARS_RU.map(v => (mean((S.ru||[]).map(r => num(r[v]) ?? 0)) ?? 0) * 100);
 const ptsRuptura = r => VARS_RU.reduce((a,v) => a + PESO_RU[v]*(num(r[v]) ?? 0), 0);
+
+/* Contexto de cada eixo, mostrado no tooltip abaixo do valor. */
+const ctxMS = i => S.ms
+  ? `${S.ms.filter(r => (num(r[VARS_MS[i]]) ?? 0) === 1).length} de ${S.ms.length} clientes em dia` : null;
+const ctxSC = i => S.sc
+  ? `${S.sc.filter(r => (num(r[VARS_SC[i]]) ?? 0) < 50).length} de ${S.sc.length} clientes abaixo de 50` : null;
+const ctxRU = i => S.ru
+  ? `${S.ru.filter(r => (num(r[VARS_RU[i]]) ?? 0) === 1).length} de ${S.ru.length} clientes pontuando · peso ${PESO_RU[VARS_RU[i]]}` : null;
 
 /* -------------------------------------------------- linha de ranking */
 function linhaRank(r, i, valor, extra){
@@ -865,7 +1032,7 @@ function renderMS(){
   const el = document.getElementById("ms-bd");
   if (!S.ms){ el.innerHTML = `<div class="empty">Aguardando o relatório Modelo de Servir.</div>`; document.getElementById("ms-meta").textContent = ""; return; }
   const med = mediaMS();
-  const axes = LBL_MS.map((l,i) => ({ label:l, value:med[i], title:VARS_MS[i] }));
+  const axes = LBL_MS.map((l,i) => ({ label:l, nome:VARS_MS[i], value:med[i], detalhe:ctxMS(i) }));
   const rk = rankings("ms","Índice Modelo de Servir","Índice");
 
   const listas = DIAS_MS.map(([col,nome]) => {
@@ -895,6 +1062,7 @@ function renderMS(){
     ${LEGENDA_MODELO}
     <div class="grid g5" style="margin-top:18px">${listas}</div>
     <p class="note">Dias até o vencimento em ordem crescente. Célula sem número conta como zero dia, ou seja, <b>vencido</b>. O selo <span class="chip fb alert">FB</span> marca cliente Fee Based com menos de 15 dias.</p>`;
+  ativarRadares(el);
 }
 
 /* -------------------------------------------------- Saúde do Cliente */
@@ -910,7 +1078,7 @@ function renderSC(){
   const el = document.getElementById("sc-bd");
   if (!S.sc){ el.innerHTML = `<div class="empty">Aguardando o relatório Saúde do Cliente.</div>`; document.getElementById("sc-meta").textContent = ""; return; }
   const med = mediaSC();
-  const axes = LBL_SC.map((l,i) => ({ label:l, value:med[i], title:VARS_SC[i] }));
+  const axes = LBL_SC.map((l,i) => ({ label:l, nome:VARS_SC[i], value:med[i], detalhe:ctxSC(i) }));
   const rk = rankings("sc","Índice de Saúde do Cliente","Índice");
 
   const listas = VAL_SC.map(d => {
@@ -940,6 +1108,7 @@ function renderSC(){
     ${LEGENDA_MODELO}
     <div class="grid g5" style="margin-top:18px">${listas}</div>
     <p class="note">Valores brutos das últimas colunas do relatório, em ordem crescente — o cliente mais frágil de cada variável aparece no topo.</p>`;
+  ativarRadares(el);
 }
 
 /* -------------------------------------------------- Ruptura */
@@ -947,7 +1116,7 @@ function renderRU(){
   const el = document.getElementById("ru-bd");
   if (!S.ru){ el.innerHTML = `<div class="empty">Aguardando o relatório Ruptura.</div>`; document.getElementById("ru-meta").textContent = ""; return; }
   const med = mediaRU();
-  const axes = VARS_RU.map((v,i) => ({ label:v, value:med[i], title:`${v} (peso ${PESO_RU[v]})` }));
+  const axes = VARS_RU.map((v,i) => ({ label:v, value:med[i], detalhe:ctxRU(i) }));
 
   const comPts = (S.ru||[]).map(r => ({ r, p: ptsRuptura(r) })).filter(x => x.p > 0).sort((a,b) => b.p - a.p);
   const emRup  = (S.ru||[]).filter(r => ptsRuptura(r) >= RU_CORTE);
@@ -1017,6 +1186,7 @@ function renderRU(){
         <tbody>${tabela}</tbody>
       </table></div>
     </div>`;
+  ativarRadares(el);
 }
 
 /* -------------------------------------------------- Compilado */
@@ -1034,10 +1204,15 @@ function renderComp(){
   const ruMed = S.ru ? mean(S.ru.map(r => ptsRuptura(r))) : null;
   const gRU = ruMed === null ? null : 100 - (ruMed / RU_MAX * 100);
 
+  const emRupN = S.ru ? S.ru.filter(r => ptsRuptura(r) >= RU_CORTE).length : 0;
   const eixosGeral = [
-    { label:"Modelo de Servir", value:gMS ?? 0, title:"Índice Modelo de Servir médio" },
-    { label:"Saúde do Cliente", value:gSC ?? 0, title:"Índice de Saúde do Cliente médio" },
-    { label:"Ruptura (inverso)", value:gRU ?? 0, title:`100 − média de pontos de ruptura ÷ ${RU_MAX}` }
+    { label:"Modelo de Servir", value:gMS ?? 0,
+      detalhe: S.ms ? `média do Índice Modelo de Servir de ${S.ms.length} clientes` : "relatório não carregado" },
+    { label:"Saúde do Cliente", value:gSC ?? 0,
+      detalhe: S.sc ? `média do Índice de Saúde de ${S.sc.length} clientes` : "relatório não carregado" },
+    { label:"Ruptura (inverso)", nome:"Ruptura (índice inverso)", value:gRU ?? 0,
+      detalhe: ruMed === null ? "relatório não carregado"
+        : `média bruta ${f1(ruMed)} de ${RU_MAX} pontos · ${emRupN} cliente${emRupN===1?"":"s"} em ruptura` }
   ];
 
   // radar combinado
@@ -1047,10 +1222,10 @@ function renderComp(){
   const medRU = S.ruInvert ? medRUraw.map(v => 100 - v) : medRUraw;
 
   const eixos = []
-    .concat(LBL_MS.map((l,i) => ({ label:l, value:medMS[i], title:`Modelo de Servir · ${VARS_MS[i]}` })))
-    .concat(LBL_SC.map((l,i) => ({ label:l, value:medSC[i], title:`Saúde do Cliente · ${VARS_SC[i]}` })))
+    .concat(LBL_MS.map((l,i) => ({ label:l, nome:VARS_MS[i], value:medMS[i], detalhe:ctxMS(i) })))
+    .concat(LBL_SC.map((l,i) => ({ label:l, nome:VARS_SC[i], value:medSC[i], detalhe:ctxSC(i) })))
     .concat(VARS_RU.map((v,i) => ({ label:v, value:medRU[i],
-      title:`Ruptura · ${v} — ${f1(medRUraw[i])}% da carteira pontuando` })));
+      detalhe: (ctxRU(i) || "") + (S.ruInvert ? ` · eixo invertido, bruto ${f1(medRUraw[i])}` : "") })));
 
   const grupos = [
     { label:"Modelo de Servir", color:"var(--c-ms)", tint:"var(--tint-ms)", from:0, to:5 },
@@ -1114,6 +1289,7 @@ function renderComp(){
       <div id="cliente-out"></div>
     </div>`;
 
+  ativarRadares(el);
   document.getElementById("ru-inv").onclick = () => { S.ruInvert = true;  renderComp(); };
   document.getElementById("ru-raw").onclick = () => { S.ruInvert = false; renderComp(); };
   const input = document.getElementById("busca");
@@ -1229,7 +1405,8 @@ function srcCard(spec){
   } else if (carregado && f){
     const comp = String((S[spec.id][0] || {})["Ano Mês"] ?? "");
     msg = `<div class="src-msg ok"><b>${esc(f.nome)}</b> · ${S[spec.id].length} clientes` +
-      (comp.length === 6 ? ` · competência ${comp.slice(4)}/${comp.slice(0,4)}` : "") + `</div>`;
+      (comp.length === 6 ? ` · competência ${comp.slice(4)}/${comp.slice(0,4)}` : "") +
+      (f.cache ? ` <span class="restaurado">restaurado da sessão anterior</span>` : "") + `</div>`;
   }
   return `<div class="src ${erro ? "err" : carregado ? "ok" : ""}" data-k="${spec.id}">
     <div class="src-hd">
@@ -1284,7 +1461,7 @@ async function receber(k, file){
             : "Faltam as colunas abaixo:") };
     } else {
       S[k] = v.rows;
-      S.files[k] = { nome:file.name };
+      S.files[k] = { nome:file.name };   // sem cache: anexado agora
     }
   }catch(err){
     S[k] = null;
