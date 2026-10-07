@@ -386,6 +386,9 @@ svg.radar .cap{fill:transparent}
 .funil .et{display:grid; grid-template-columns:1fr auto; gap:3px 10px; align-items:baseline}
 .funil .et .nome{font-size:12px; color:var(--ink-2)}
 .funil .et .qtd{font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600; font-variant-numeric:tabular-nums}
+.funil .et .qtd i{font-style:normal; font-size:10.5px; font-weight:400; color:var(--ink-3)}
+.funil .et.batida .barra{background:var(--ok)}
+.funil .et.batida .qtd{color:var(--ok)}
 .funil .et .trilha{display:block; grid-column:1/-1; height:7px; border-radius:4px; background:var(--card-3); overflow:hidden}
 /* span é inline por padrão e ignoraria width/height: a barra precisa ser bloco */
 .funil .et .barra{display:block; height:100%; border-radius:4px; background:var(--c-pp); transition:width .3s ease}
@@ -1322,7 +1325,7 @@ function renderRU(){
 }
 
 /* -------------------------------------------------- Prospecção */
-const META_PP_MIN = 3;                     // clientes novos exigidos no mês
+const META_PP_MIN = 4;   // contas 300K+ abertas exigidas no mês; vale para os três indicadores
 
 const ppAtivo   = r => (num(r["Flag Cliente Ativo"]) ?? 0) === 1;
 const pp300mais = r => (num(r["Habilitação 300K+"]) ?? 0) === 1;
@@ -1369,24 +1372,27 @@ function renderPP(){
 
   const painelMeta = meses.map(mes => {
     const rows = porMes.get(mes);
+    // Só conta 300K+ aberta entra na meta; cada indicador é medido contra o mesmo alvo.
+    const ativos = rows.filter(ppAtivo);
+    const c300 = ativos.filter(pp300mais);
+    const cFP  = c300.filter(ppFPexec);
+    const cFee = cFP.filter(ppFee);
     const et = [
-      { nome:"Contas no relatório",          set:rows },
-      { nome:"Ativaram a conta",             set:rows.filter(ppAtivo) },
-      { nome:"Habilitação 300K+",            set:rows.filter(r => ppAtivo(r) && pp300mais(r)) },
-      { nome:"Financial Planning executado", set:rows.filter(r => ppAtivo(r) && pp300mais(r) && ppFPexec(r)) },
-      { nome:"Fee Based",                    set:rows.filter(r => ppAtivo(r) && pp300mais(r) && ppFPexec(r) && ppFee(r)) }
+      { nome:"Contas 300K+ abertas",                 set:c300 },
+      { nome:"…com Financial Planning executado",    set:cFP  },
+      { nome:"…e em modelo Fee Based",               set:cFee }
     ];
-    const qual = et[et.length-1].set;
-    const ok = qual.length >= META_PP_MIN;
-    const base = Math.max(1, rows.length);
+    const ok = et.every(e => e.set.length >= META_PP_MIN);
     const rotulo = mes.length === 6 ? `${mes.slice(4)}/${mes.slice(0,4)}` : mes;
+    const foraFaixa = ativos.length - c300.length;
 
     const funil = et.map((e,i) => {
       const perda = i > 0 ? et[i-1].set.length - e.set.length : 0;
-      return `<div class="et${e.set.length === 0 ? " zero" : ""}">
+      const pct = Math.min(100, e.set.length / META_PP_MIN * 100);
+      return `<div class="et${e.set.length === 0 ? " zero" : ""}${e.set.length >= META_PP_MIN ? " batida" : ""}">
         <span class="nome">${e.nome}${perda > 0 ? ` <span class="perda">−${perda}</span>` : ""}</span>
-        <span class="qtd">${e.set.length}</span>
-        <span class="trilha"><span class="barra" style="width:${(e.set.length/base*100).toFixed(1)}%"></span></span>
+        <span class="qtd">${e.set.length}<i>/${META_PP_MIN}</i></span>
+        <span class="trilha"><span class="barra" style="width:${pct.toFixed(1)}%"></span></span>
       </div>`;
     }).join("");
 
@@ -1394,13 +1400,15 @@ function renderPP(){
       <div class="panel-hd"><h3>Meta de captação</h3><span class="tag">competência ${rotulo}</span></div>
       <div class="panel-bd">
         <div class="veredito">
-          <span class="n" style="color:${ok ? "var(--ok)" : "var(--bad)"}">${qual.length}</span>
-          <span class="alvo">de ${META_PP_MIN} exigidos</span>
+          <span class="n" style="color:${ok ? "var(--ok)" : "var(--bad)"}">${cFee.length}</span>
+          <span class="alvo">de ${META_PP_MIN} exigidas</span>
           <span class="selo ${ok ? "ok" : "nao"}">${ok ? "Meta atingida" : "Meta não atingida"}</span>
         </div>
         <div class="funil">${funil}</div>
-        <p class="note">Conta para a meta o cliente que ativou, tem habilitação 300K+, Financial Planning
-        com data de execução e modelo Fee Based. O número ao lado de cada etapa é quanto se perde nela.</p>
+        <p class="note">A meta é de <b>${META_PP_MIN} contas 300K+ abertas no mês</b>, e os três indicadores
+        correm contra esse mesmo alvo. ${rows.length} conta${rows.length===1?"":"s"} no relatório,
+        ${ativos.length} ativada${ativos.length===1?"":"s"}${foraFaixa > 0 ? `, ${foraFaixa} fora da faixa 300K+` : ""}.
+        O número em vermelho ao lado de um indicador é quanto se perde dele para o anterior.</p>
       </div>
     </div>`;
   }).join("");
@@ -1415,7 +1423,8 @@ function renderPP(){
     <div class="panel-hd"><h3>Contas prospectadas</h3></div>
     <div class="panel-bd" style="display:flex; flex-direction:column; gap:13px">
       ${[["Contas no relatório", S.pp.length, `${ativos} ativaram`],
-         ["Habilitação 300K+", n300, `${S.pp.length - n300} na faixa 300K−`],
+         ["Habilitação 300K+", `${n300}<span style="font-size:13px; color:var(--ink-3)">/${META_PP_MIN}</span>`,
+          `${n300 >= META_PP_MIN ? "meta cumprida" : "meta do mês"} · ${S.pp.length - n300} na faixa 300K−`],
          ["AuC trazido", fMoney(auc), `potencial declarado ${fMoney(pot)}`],
          ["Potencial não convertido", fMoney(Math.max(0, pot - auc)), "potencial menos AuC atual"]
        ].map(([l,v,d]) => `<div class="kpi" style="border:0; background:transparent; padding:0">
@@ -1532,7 +1541,7 @@ function renderPP(){
   </div>`;
 
   const qualTotal = S.pp.filter(r => ppAtivo(r) && pp300mais(r) && ppFPexec(r) && ppFee(r)).length;
-  metaEl.textContent = `${S.pp.length} conta${S.pp.length===1?"":"s"} · ${qualTotal} para a meta` +
+  metaEl.textContent = `${S.pp.length} conta${S.pp.length===1?"":"s"} · ${qualTotal} de ${META_PP_MIN} na meta` +
     (compPP.length === 6 ? ` · competência ${compPP.slice(4)}/${compPP.slice(0,4)}` : "");
 
   el.innerHTML = `
@@ -1580,16 +1589,34 @@ function renderComp(){
   const medRUraw = S.ru ? mediaRU() : VARS_RU.map(() => 0);
   const medRU = S.ruInvert ? medRUraw.map(v => 100 - v) : medRUraw;
 
+  /* Prospecção são contagens, não notas de 0 a 100. Para caberem no mesmo eixo sem
+     mentir, entram como progresso contra a meta do mês: 100 = meta cumprida. */
+  const ppTotal = S.pp ? S.pp.length : 0;
+  const pp300n  = S.pp ? S.pp.filter(r => ppAtivo(r) && pp300mais(r)).length : 0;
+  const rumoMeta = n => Math.min(100, n / META_PP_MIN * 100);
+
   const eixos = []
     .concat(LBL_MS.map((l,i) => ({ label:l, nome:VARS_MS[i], value:medMS[i], detalhe:ctxMS(i) })))
     .concat(LBL_SC.map((l,i) => ({ label:l, nome:VARS_SC[i], value:medSC[i], detalhe:ctxSC(i) })))
     .concat(VARS_RU.map((v,i) => ({ label:v, value:medRU[i],
-      detalhe: (ctxRU(i) || "") + (S.ruInvert ? ` · eixo invertido, bruto ${f1(medRUraw[i])}` : "") })));
+      detalhe: (ctxRU(i) || "") + (S.ruInvert ? ` · eixo invertido, bruto ${f1(medRUraw[i])}` : "") })))
+    .concat([
+      { label:"Contas no relatório", nome:"Contas no relatório de Prospecção",
+        value: rumoMeta(ppTotal),
+        detalhe: S.pp ? `${ppTotal} conta${ppTotal===1?"":"s"} no relatório · é delas que saem as ${META_PP_MIN} da meta`
+                      : "relatório não carregado" },
+      { label:"Contas 300K+ habilitadas", nome:"Contas 300K+ habilitadas",
+        value: rumoMeta(pp300n),
+        detalhe: !S.pp ? "relatório não carregado"
+          : pp300n >= META_PP_MIN ? `${pp300n} contas 300K+ · meta de ${META_PP_MIN} cumprida`
+          : `${pp300n} de ${META_PP_MIN} na meta do mês` }
+    ]);
 
   const grupos = [
-    { label:"Modelo de Servir", color:"var(--c-ms)", tint:"var(--tint-ms)", from:0, to:5 },
-    { label:"Saúde do Cliente", color:"var(--c-sc)", tint:"var(--tint-sc)", from:6, to:10 },
-    { label:"Ruptura",          color:"var(--c-ru)", tint:"var(--tint-ru)", from:11, to:17 }
+    { label:"Modelo de Servir", color:"var(--c-ms)", tint:"var(--tint-ms)", from:0,  to:5  },
+    { label:"Saúde do Cliente", color:"var(--c-sc)", tint:"var(--tint-sc)", from:6,  to:10 },
+    { label:"Ruptura",          color:"var(--c-ru)", tint:"var(--tint-ru)", from:11, to:17 },
+    { label:"Prospecção",       color:"var(--c-pp)", tint:"var(--tint-pp)", from:18, to:19 }
   ];
 
   const base = S.ms || S.sc || S.ru;
@@ -1632,7 +1659,8 @@ function renderComp(){
           </div>
           <p class="note">${S.ruInvert
             ? "Os sete eixos de Ruptura estão invertidos (100 = nenhum cliente pontuando), na mesma direção dos demais. Passe o mouse em cada ponto para ver o percentual bruto."
-            : "Os sete eixos de Ruptura estão em valor bruto: o percentual da carteira que pontua naquela variável — aqui, quanto <b>menor</b>, melhor."}</p>
+            : "Os sete eixos de Ruptura estão em valor bruto: o percentual da carteira que pontua naquela variável — aqui, quanto <b>menor</b>, melhor."}
+            Os dois eixos de Prospecção são contagens, então aparecem como <b>progresso em relação à meta de ${META_PP_MIN} contas</b> — 100 significa meta cumprida. O número de contas está no detalhe de cada ponto.</p>
         </div>
       </div>
     </div>

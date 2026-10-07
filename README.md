@@ -13,17 +13,19 @@ página avisa qual relatório ele parece ser.
 ## O que cada bloco traz
 
 - **Dados compilados** — índice geral do profissional, radar com todas as
-  variáveis dos três relatórios de índice e busca por código de cliente.
+  variáveis dos quatro relatórios e busca por código de cliente. Os dois eixos
+  de Prospecção são contagens, então entram como progresso em relação à meta do
+  mês: 100 significa meta cumprida.
 - **Modelo de Servir** — aderência média por variável, 20 melhores e 20 piores,
   e as cinco listas de dias até o vencimento.
 - **Saúde do Cliente** — pontuação média por variável, rankings e os valores
   brutos das cinco últimas colunas.
 - **Ruptura** — incidência por variável, clientes em ruptura (6+ pontos),
   pontuação por cliente e meses acumulados.
-- **Prospecção** — meta de captação do mês (3 clientes novos, 300K+, com
-  Financial Planning executado e Fee Based), o funil que mostra onde se perde
-  cada um, e a conferência de AuC, modelo de remuneração e Financial Planning
-  contra os outros relatórios.
+- **Prospecção** — meta de captação do mês (4 contas 300K+ abertas, todas com
+  Financial Planning executado e em Fee Based), com os três indicadores medidos
+  contra esse mesmo alvo, e a conferência de AuC, modelo de remuneração e
+  Financial Planning contra os outros relatórios.
 
 A Prospecção descreve a conta como foi aberta; os relatórios de índice descrevem
 o estado atual. Conta nova costuma levar um ciclo para entrar nessas bases, então
