@@ -187,9 +187,14 @@ button,input,select{font:inherit; color:inherit}
 .drop .h{display:block; font-size:11px; color:var(--ink-3); margin-top:3px}
 .src.ok .drop{border-style:solid; border-color:color-mix(in srgb,var(--ok) 45%,transparent); background:var(--ok-bg)}
 .src.err .drop{border-style:solid; border-color:color-mix(in srgb,var(--bad) 50%,transparent); background:var(--bad-bg)}
+/* vazio não é erro: borda tracejada e tom âmbar, visivelmente distinto do vermelho */
+.src.vazio .drop{border-style:dashed; border-color:color-mix(in srgb,var(--warn) 55%,transparent); background:var(--warn-bg)}
+.src.vazio .drop .ico{opacity:.85; font-size:17px}
+.src.err .drop .ico,.src.ok .drop .ico{opacity:.9}
 .src-msg{padding:0 14px 13px; font-size:11.5px; line-height:1.5}
 .src-msg.err{color:var(--bad)}
 .src-msg.ok{color:var(--ok)}
+.src-msg.vazio{color:var(--warn)}
 .src-msg b{font-weight:600}
 .src-msg ul{margin:5px 0 0; padding-left:16px}
 .src-msg .restaurado{
@@ -760,6 +765,17 @@ function findHeader(matrix, spec){
   return best;
 }
 
+/* Num export vazio a competência só existe no rodapé "Filtros aplicados".
+   É o que permite dizer de qual mês é o arquivo sem nenhuma linha de cliente. */
+function compDoRodape(matrix){
+  for (const row of matrix)
+    for (const c of row){
+      const m = /NUM_ANO_MES\s*es\s*(\d{6})/i.exec(String(c ?? ""));
+      if (m) return m[1];
+    }
+  return null;
+}
+
 function validate(matrix, spec){
   const hit = findHeader(matrix, spec);
   const missing = spec.cols.filter(c => !(norm(c) in (hit.map || {})));
@@ -789,7 +805,7 @@ function validate(matrix, spec){
     spec.cols.forEach(c => { o[c] = matrix[r][idx[c]]; });
     rows.push(o);
   }
-  if (!rows.length) return { ok:false, missing:[], guess:null, vazio:true };
+  if (!rows.length) return { ok:false, missing:[], guess:null, vazio:true, comp:compDoRodape(matrix) };
   return { ok:true, rows };
 }
 
@@ -814,7 +830,7 @@ function restore(){
     ORDER.forEach(k => { if (Array.isArray(d[k])) S[k] = d[k]; });
     S.files = d.files || {};
     // sinaliza que estes dados vieram da sessão anterior, não de um anexo agora
-    ORDER.forEach(k => { if (S[k] && S.files[k]) S.files[k].cache = true; });
+    ORDER.forEach(k => { if ((S[k] || (S.files[k] && S.files[k].vazio)) && S.files[k]) S.files[k].cache = true; });
     S.cliente = d.cliente || null;
   }catch(e){ /* cache inválido, ignora */ }
 }
@@ -1089,6 +1105,17 @@ function ativarRadares(root){
    ========================================================================== */
 
 const byCod = k => { const m = new Map(); (S[k]||[]).forEach(r => m.set(r.cod, r)); return m; };
+
+/** Estado vazio de um bloco: distingue "não anexado" de "anexado e sem linhas". */
+function blocoSemDados(k){
+  const f = S.files[k];
+  if (f && f.vazio){
+    const c = fComp(f.comp);
+    return `<div class="empty"><b>${esc(SPECS[k].nome)} sem preenchimento${c ? ` em ${c}` : ""}.</b><br>
+      O arquivo foi lido e as colunas conferem, mas não há nenhuma linha de cliente.</div>`;
+  }
+  return `<div class="empty">Aguardando o relatório ${esc(SPECS[k].nome)}.</div>`;
+}
 const mean = arr => { const v = arr.filter(x => x !== null && Number.isFinite(x)); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; };
 
 const VARS_MS = ["Financial Planning","Open Investment","Conta Acessada","Ordem Enviada","XPerformance","Ativ. de Relacionamento"];
@@ -1165,7 +1192,7 @@ const DIAS_MS = [
 
 function renderMS(){
   const el = document.getElementById("ms-bd");
-  if (!S.ms){ el.innerHTML = `<div class="empty">Aguardando o relatório Modelo de Servir.</div>`; document.getElementById("ms-meta").textContent = ""; return; }
+  if (!S.ms){ el.innerHTML = blocoSemDados("ms"); document.getElementById("ms-meta").textContent = ""; return; }
   const med = mediaMS();
   const axes = LBL_MS.map((l,i) => ({ label:l, nome:VARS_MS[i], value:med[i], detalhe:ctxMS(i) }));
   const rk = rankings("ms","Índice Modelo de Servir","Índice");
@@ -1211,7 +1238,7 @@ const VAL_SC = [
 
 function renderSC(){
   const el = document.getElementById("sc-bd");
-  if (!S.sc){ el.innerHTML = `<div class="empty">Aguardando o relatório Saúde do Cliente.</div>`; document.getElementById("sc-meta").textContent = ""; return; }
+  if (!S.sc){ el.innerHTML = blocoSemDados("sc"); document.getElementById("sc-meta").textContent = ""; return; }
   const med = mediaSC();
   const axes = LBL_SC.map((l,i) => ({ label:l, nome:VARS_SC[i], value:med[i], detalhe:ctxSC(i) }));
   const rk = rankings("sc","Índice de Saúde do Cliente","Índice");
@@ -1249,7 +1276,7 @@ function renderSC(){
 /* -------------------------------------------------- Ruptura */
 function renderRU(){
   const el = document.getElementById("ru-bd");
-  if (!S.ru){ el.innerHTML = `<div class="empty">Aguardando o relatório Ruptura.</div>`; document.getElementById("ru-meta").textContent = ""; return; }
+  if (!S.ru){ el.innerHTML = blocoSemDados("ru"); document.getElementById("ru-meta").textContent = ""; return; }
   const med = mediaRU();
   const axes = VARS_RU.map((v,i) => ({ label:v, value:med[i], detalhe:ctxRU(i) }));
 
@@ -1357,8 +1384,10 @@ function renderPP(){
   const el = document.getElementById("pp-bd");
   const metaEl = document.getElementById("pp-meta");
   if (!S.pp){
-    el.innerHTML = `<div class="empty">Aguardando o relatório Prospecção.</div>`;
-    metaEl.textContent = ""; return;
+    el.innerHTML = blocoSemDados("pp");
+    metaEl.textContent = (S.files.pp && S.files.pp.vazio)
+      ? `sem contas${fComp(S.files.pp.comp) ? ` em ${fComp(S.files.pp.comp)}` : ""}` : "";
+    return;
   }
 
   /* ---------------------------------------------- meta por competência */
@@ -1604,10 +1633,15 @@ function renderComp(){
       { label:"Contas no relatório", nome:"Contas no relatório de Prospecção",
         value: rumoMeta(ppTotal),
         detalhe: S.pp ? `${ppTotal} conta${ppTotal===1?"":"s"} no relatório · é delas que saem as ${META_PP_MIN} da meta`
-                      : "relatório não carregado" },
+          : (S.files.pp && S.files.pp.vazio
+              ? `nenhuma conta${fComp(S.files.pp.comp) ? ` em ${fComp(S.files.pp.comp)}` : ""}`
+              : "relatório não carregado") },
       { label:"Contas 300K+ habilitadas", nome:"Contas 300K+ habilitadas",
         value: rumoMeta(pp300n),
-        detalhe: !S.pp ? "relatório não carregado"
+        detalhe: !S.pp
+            ? (S.files.pp && S.files.pp.vazio
+                ? `nenhuma conta${fComp(S.files.pp.comp) ? ` em ${fComp(S.files.pp.comp)}` : ""} · 0 de ${META_PP_MIN}`
+                : "relatório não carregado")
           : pp300n >= META_PP_MIN ? `${pp300n} contas 300K+ · meta de ${META_PP_MIN} cumprida`
           : `${pp300n} de ${META_PP_MIN} na meta do mês` }
     ]);
@@ -1790,33 +1824,60 @@ function buscarCliente(cod, silencioso){
    7. Fontes: dropzones, validação e mensagens
    ========================================================================== */
 
+/** Mês legível a partir de "AAAAMM". */
+const fComp = c => { const t = String(c ?? "");
+  return t.length === 6 ? `${t.slice(4)}/${t.slice(0,4)}` : null; };
+
+/* Três estados por cartão, deliberadamente distintos:
+   ok     — arquivo lido, com contas
+   vazio  — arquivo certo, mês sem nenhuma linha (não é erro)
+   erro   — colunas não conferem, provavelmente o arquivo errado no campo */
 function srcCard(spec){
-  const f = S.files[spec.id];
+  const f = S.files[spec.id] || null;
   const carregado = !!S[spec.id];
-  const erro = f && f.erro;
+  const erro  = !!(f && f.erro);
+  const vazio = !!(f && f.vazio);
+  const estado = erro ? "err" : vazio ? "vazio" : carregado ? "ok" : "";
+  const marca = f && f.cache ? ` <span class="restaurado">restaurado da sessão anterior</span>` : "";
+
   let msg = "";
   if (erro){
-    msg = `<div class="src-msg err"><b>Este arquivo não confere com o relatório ${esc(spec.nome)}.</b>` +
+    msg = `<div class="src-msg err">
+      <b>Arquivo trocado: não confere com o relatório ${esc(spec.nome)}.</b>` +
       (f.detalhe ? `<div style="margin-top:4px">${f.detalhe}</div>` : "") +
       (f.missing && f.missing.length
         ? `<ul>${f.missing.slice(0,6).map(m => `<li>${esc(m)}</li>`).join("")}${f.missing.length > 6 ? `<li>e mais ${f.missing.length-6} coluna(s)</li>` : ""}</ul>` : "") +
       `</div>`;
+  } else if (vazio){
+    const c = fComp(f.comp);
+    msg = `<div class="src-msg vazio">
+      <b>${esc(f.nome)}</b>${c ? ` · competência ${c}` : ""}${marca}
+      <div style="margin-top:4px">O arquivo é o certo e as colunas conferem — ele simplesmente
+      não tem nenhuma linha${c ? ` em ${c}` : ""}. Se você esperava movimento neste mês,
+      confira se baixou o relatório da competência correta.</div>
+    </div>`;
   } else if (carregado && f){
-    const comp = String((S[spec.id][0] || {})["Ano Mês"] ?? "");
+    const c = fComp((S[spec.id][0] || {})["Ano Mês"]);
     msg = `<div class="src-msg ok"><b>${esc(f.nome)}</b> · ${S[spec.id].length} clientes` +
-      (comp.length === 6 ? ` · competência ${comp.slice(4)}/${comp.slice(0,4)}` : "") +
-      (f.cache ? ` <span class="restaurado">restaurado da sessão anterior</span>` : "") + `</div>`;
+      (c ? ` · competência ${c}` : "") + marca + `</div>`;
   }
-  return `<div class="src ${erro ? "err" : carregado ? "ok" : ""}" data-k="${spec.id}">
+
+  const ico = erro ? "⚠" : vazio ? "∅" : carregado ? "✓" : "⤓";
+  const titulo = erro ? "Anexar o arquivo correto"
+    : vazio ? "Sem preenchimento neste mês"
+    : carregado ? "Trocar arquivo"
+    : "Anexar " + esc(spec.nome);
+
+  return `<div class="src ${estado}" data-k="${spec.id}">
     <div class="src-hd">
       <span class="n">RELATÓRIO ${spec.n}</span>
       <h3>${esc(spec.nome)}</h3>
       <p>${esc(spec.dica)}</p>
     </div>
     <label class="drop" data-k="${spec.id}">
-      <span class="ico" aria-hidden="true">${erro ? "⚠" : carregado ? "✓" : "⤓"}</span>
-      <span class="t">${carregado && !erro ? "Trocar arquivo" : "Anexar " + esc(spec.nome)}</span>
-      <span class="h">Arraste o .xlsx aqui ou clique para escolher</span>
+      <span class="ico" aria-hidden="true">${ico}</span>
+      <span class="t">${titulo}</span>
+      <span class="h">${vazio || carregado || erro ? "Arraste outro .xlsx aqui ou clique para trocar" : "Arraste o .xlsx aqui ou clique para escolher"}</span>
       <input type="file" accept=".xlsx,.xlsm" hidden data-k="${spec.id}">
     </label>
     ${msg}
@@ -1825,14 +1886,30 @@ function srcCard(spec){
 
 function renderFontes(){
   document.getElementById("src-grid").innerHTML = ORDER.map(k => srcCard(SPECS[k])).join("");
-  const n = ORDER.filter(k => S[k]).length;
-  document.getElementById("fontes-meta").textContent = `${n} de ${ORDER.length} carregados`;
+  const comVazio = ORDER.filter(k => S.files[k] && S.files[k].vazio);
+  const n = ORDER.filter(k => S[k] || (S.files[k] && S.files[k].vazio)).length;
+  document.getElementById("fontes-meta").textContent =
+    `${n} de ${ORDER.length} carregados` +
+    (comVazio.length ? ` · ${comVazio.length} sem preenchimento` : "");
 
   // avisos cruzados
   const av = [];
-  const comps = ORDER.filter(k => S[k]).map(k => String((S[k][0]||{})["Ano Mês"] ?? ""));
-  if (new Set(comps).size > 1)
-    av.push(`Os relatórios são de competências diferentes (${[...new Set(comps)].join(", ")}). Os números consolidados misturam períodos.`);
+  /* A competência de um arquivo vazio vem do rodapé, então ela entra aqui também:
+     é exatamente o caso de ter baixado o mês errado sem perceber. */
+  const porComp = new Map();
+  ORDER.forEach(k => {
+    const c = S[k] ? String((S[k][0]||{})["Ano Mês"] ?? "")
+            : (S.files[k] && S.files[k].vazio ? String(S.files[k].comp ?? "") : null);
+    if (!c) return;
+    if (!porComp.has(c)) porComp.set(c, []);
+    porComp.get(c).push(SPECS[k].nome);
+  });
+  if (porComp.size > 1){
+    const lista = [...porComp.entries()]
+      .sort((a,b) => b[0].localeCompare(a[0]))
+      .map(([c, nomes]) => `<b>${fComp(c) || c}</b> (${nomes.join(", ")})`).join(" · ");
+    av.push(`Os relatórios são de competências diferentes: ${lista}. Confira se baixou todos do mesmo mês — os números consolidados e a conferência cruzada misturam períodos.`);
+  }
   // a comparação de bases só vale entre os três relatórios de índice
   const sets = ORDER_IDX.filter(k => S[k]).map(k => new Set(S[k].map(r => r.cod)));
   if (sets.length > 1){
@@ -1851,14 +1928,16 @@ async function receber(k, file){
     if (!/\.(xlsx|xlsm)$/i.test(file.name)) throw new Error("Formato não suportado. Envie o arquivo .xlsx exportado pelo sistema.");
     const matrix = await readXlsx(file);
     const v = validate(matrix, spec);
-    if (!v.ok){
+    if (v.vazio){
+      // Arquivo certo, mês sem movimento. Não é erro: é informação.
+      S[k] = null;
+      S.files[k] = { nome:file.name, vazio:true, comp:v.comp || null };
+    } else if (!v.ok){
       S[k] = null;
       S.files[k] = { nome:file.name, erro:true, missing:v.missing,
-        detalhe: v.vazio
-          ? "O arquivo tem as colunas certas, mas nenhuma linha de cliente."
-          : (v.guess
-            ? `O conteúdo parece ser o relatório <b>${esc(v.guess)}</b>. Confira em qual campo você anexou. Faltam as colunas:`
-            : "Faltam as colunas abaixo:") };
+        detalhe: v.guess
+          ? `O conteúdo parece ser o relatório <b>${esc(v.guess)}</b>. Confira em qual campo você anexou. Faltam as colunas:`
+          : "Faltam as colunas abaixo:" };
     } else {
       S[k] = v.rows;
       S.files[k] = { nome:file.name };   // sem cache: anexado agora
@@ -1880,7 +1959,8 @@ function renderTudo(){
   renderPP();
   ORDER.forEach(k => {
     const m = document.getElementById(k + "-meta");
-    if (!S[k] && m) m.textContent = "";
+    const vazio = S.files[k] && S.files[k].vazio;   // carregado e sem linhas: mantém o rótulo
+    if (!S[k] && !vazio && m) m.textContent = "";
   });
 }
 

@@ -7,8 +7,19 @@ rankings, a meta de captação do mês e a ficha por cliente.
 ## Usar
 
 Abra a página publicada (GitHub Pages) ou o `index.html` local, e anexe cada
-relatório no quadro correspondente. Se um arquivo for anexado no campo errado, a
-página avisa qual relatório ele parece ser.
+relatório no quadro correspondente. Cada quadro tem três estados, de propósito
+distintos:
+
+- **verde** — arquivo lido, com a contagem de clientes e a competência;
+- **âmbar tracejado** — o arquivo é o certo, mas o mês não tem nenhuma linha.
+  Não é erro: num mês sem captação é o esperado. A competência aparece no
+  quadro (lida do rodapé do próprio arquivo) para você conferir se baixou o
+  mês que queria;
+- **vermelho** — as colunas não conferem. A página diz qual relatório o arquivo
+  parece ser, para o caso de ter sido anexado no campo errado.
+
+Se os quatro não forem do mesmo mês, um aviso no topo diz qual relatório é de
+qual competência.
 
 ## O que cada bloco traz
 
