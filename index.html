@@ -442,7 +442,7 @@ svg.radar .cap{fill:transparent}
   <section class="block" id="fontes">
     <div class="block-hd">
       <span class="bar"></span>
-      <div><span class="eyebrow">Entrada</span><h2>Anexe os três relatórios</h2></div>
+      <div><span class="eyebrow">Entrada</span><h2>Anexe os relatórios</h2></div>
       <span class="meta" id="fontes-meta">0 de 4 carregados</span>
     </div>
     <div class="block-bd">
@@ -687,7 +687,7 @@ async function readXlsx(file){
 }
 
 /* ==========================================================================
-   2. Especificação dos três relatórios + validação
+   2. Especificação dos quatro relatórios + validação
    ========================================================================== */
 
 /* '+' vira "mais" antes de descartar pontuação: sem isso, "Habilitação 300K+" e
@@ -1809,7 +1809,7 @@ function renderFontes(){
     const tot = new Set(sets.flatMap(s => [...s]));
     const comum = [...tot].filter(c => sets.every(s => s.has(c)));
     if (comum.length !== tot.size)
-      av.push(`As bases não têm exatamente os mesmos clientes: ${tot.size} códigos no total, ${comum.length} presentes nos três relatórios.`);
+      av.push(`As bases não têm exatamente os mesmos clientes: ${tot.size} códigos no total, ${comum.length} presentes nos três relatórios de índice.`);
   }
   document.getElementById("banners").innerHTML = av.map(t => `<div class="banner">${t}</div>`).join("");
 }
