@@ -1550,7 +1550,9 @@ function renderPP(){
 function renderComp(){
   const el = document.getElementById("comp-bd");
   const meta = document.getElementById("comp-meta");
-  const prontos = ORDER.filter(k => S[k]);
+  /* O bloco compilado descreve a carteira sob gestão, então só os três relatórios de
+     índice o habilitam. Contar a Prospecção aqui deixaria `base` nulo logo abaixo. */
+  const prontos = ORDER_IDX.filter(k => S[k]);
   if (!prontos.length){
     el.innerHTML = `<div class="empty">Anexe os relatórios acima para montar a visão consolidada.</div>`;
     meta.textContent = ""; return;
